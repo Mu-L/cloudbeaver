@@ -37,6 +37,8 @@ export default [
   ['ui_custom', 'Настроить'],
   ['ui_configure', 'Настроить'],
   ['ui_apply', 'Применить'],
+  ['ui_cancel', 'Отменить'],
+  ['ui_reject', 'Отклонить'],
   ['ui_ignore', 'Пропустить'],
   ['ui_error', 'Ошибка'],
   ['ui_error_message', 'Ошибка:'],
@@ -131,6 +133,7 @@ export default [
   ['ui_export', 'Экспорт'],
   ['ui_you', 'Вы'],
   ['ui_ms', 'мс'],
+  ['ui_not_found', 'Не найдено'],
 
   ['root_permission_denied', 'Отказано в доступе'],
   ['root_permission_no_permission', 'У вас нет разрешения на это действие'],

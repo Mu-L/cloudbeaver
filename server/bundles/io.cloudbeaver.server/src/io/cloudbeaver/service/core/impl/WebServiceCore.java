@@ -99,6 +99,7 @@ public class WebServiceCore implements DBWServiceCore {
     @Override
     public List<WebNetworkHandlerDescriptor> getNetworkHandlers(@NotNull WebSession webSession) {
         return NetworkHandlerRegistry.getInstance().getDescriptors().stream()
+            .filter(d -> !d.isDesktopHandler())
             .map(d -> new WebNetworkHandlerDescriptor(webSession, d)).collect(Collectors.toList());
     }
 
@@ -639,7 +640,7 @@ public class WebServiceCore implements DBWServiceCore {
         @NotNull WebConnectionConfig config
     ) throws DBWebException {
         try {
-            DBNModel navigatorModel = webSession.getNavigatorModel();
+            DBNModel navigatorModel = webSession.getNavigatorModelOrThrow();
             WebSessionProjectImpl project = getProjectById(webSession, projectId);
             DBPDataSourceRegistry dataSourceRegistry = project.getDataSourceRegistry();
 
