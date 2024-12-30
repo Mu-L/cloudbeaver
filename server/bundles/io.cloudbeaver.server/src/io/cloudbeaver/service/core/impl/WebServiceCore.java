@@ -447,47 +447,7 @@ public class WebServiceCore implements DBWServiceCore {
         @Nullable String projectId,
         @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException {
-        WebSessionProjectImpl project = getProjectById(webSession, projectId);
-        var rmProject = project.getRMProject();
-        if (rmProject.getType() == RMProjectType.USER
-            && !webSession.hasPermission(DBWConstants.PERMISSION_ADMIN)
-            && !ServletAppUtils.getServletApplication().getAppConfiguration().isSupportsCustomConnections()
-        ) {
-            throw new DBWebException("New connection create is restricted by server configuration");
-        }
-        webSession.addInfoMessage("Create new connection");
-        DBPDataSourceRegistry sessionRegistry = project.getDataSourceRegistry();
-
-        // we don't need to save credentials for templates
-        if (connectionConfig.isTemplate()) {
-            connectionConfig.setSaveCredentials(false);
-        }
-        DBPDataSourceContainer newDataSource = WebServiceUtils.createConnectionFromConfig(connectionConfig,
-            sessionRegistry);
-        if (CommonUtils.isEmpty(newDataSource.getName())) {
-            newDataSource.setName(CommonUtils.notNull(connectionConfig.getName(), "NewConnection"));
-        }
-
-        try {
-            sessionRegistry.addDataSource(newDataSource);
-
-            sessionRegistry.checkForErrors();
-        } catch (DBException e) {
-            sessionRegistry.removeDataSource(newDataSource);
-            throw new DBWebException("Failed to create connection", e);
-        }
-
-        WebConnectionInfo connectionInfo = project.addConnection(newDataSource);
-        webSession.addInfoMessage("New connection was created - " + WebServiceUtils.getConnectionContainerInfo(
-            newDataSource));
-        WebEventUtils.addDataSourceUpdatedEvent(
-            webSession.getProjectById(projectId),
-            webSession,
-            connectionInfo.getId(),
-            WSConstants.EventAction.CREATE,
-            WSDataSourceProperty.CONFIGURATION
-        );
-        return connectionInfo;
+        return WebAppUtils.getWebApplication().getConnectionController().createConnection(webSession, projectId, connectionConfig);
     }
 
     @Override
@@ -496,81 +456,7 @@ public class WebServiceCore implements DBWServiceCore {
         @Nullable String projectId,
         @NotNull WebConnectionConfig config
     ) throws DBWebException {
-        // Do not check for custom connection option. Already created connections can be edited.
-        // Also template connections can be edited
-//        if (!CBApplication.getInstance().getAppConfiguration().isSupportsCustomConnections()) {
-//            throw new DBWebException("Connection edit is restricted by server configuration");
-//        }
-
-        WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, config.getConnectionId());
-        DBPDataSourceContainer dataSource = connectionInfo.getDataSourceContainer();
-        webSession.addInfoMessage("Update connection - " + WebServiceUtils.getConnectionContainerInfo(dataSource));
-        DataSourceDescriptor oldDataSource;
-        oldDataSource = dataSource.getRegistry().createDataSource(dataSource);
-        oldDataSource.setId(dataSource.getId());
-        if (!CommonUtils.isEmpty(config.getName())) {
-            dataSource.setName(config.getName());
-        }
-
-        if (config.getDescription() != null) {
-            dataSource.setDescription(config.getDescription());
-        }
-
-        WebSessionProjectImpl project = getProjectById(webSession, projectId);
-        DBPDataSourceRegistry sessionRegistry = project.getDataSourceRegistry();
-        dataSource.setFolder(config.getFolder() != null ? sessionRegistry.getFolder(config.getFolder()) : null);
-        if (config.isDefaultAutoCommit() != null) {
-            dataSource.setDefaultAutoCommit(config.isDefaultAutoCommit());
-        }
-        WebServiceUtils.setConnectionConfiguration(dataSource.getDriver(),
-            dataSource.getConnectionConfiguration(),
-            config);
-
-        // we should check that the config has changed but not check for password changes
-        dataSource.setSharedCredentials(config.isSharedCredentials());
-        dataSource.setSavePassword(config.isSaveCredentials());
-        boolean sharedCredentials = dataSource.isSharedCredentials() || !dataSource.getProject()
-            .isUseSecretStorage() && dataSource.isSavePassword();
-        if (sharedCredentials) {
-            //we must notify about the shared password change
-            WebServiceUtils.saveAuthProperties(
-                dataSource,
-                dataSource.getConnectionConfiguration(),
-                config.getCredentials(),
-                config.isSaveCredentials(),
-                config.isSharedCredentials()
-            );
-        }
-        boolean sendEvent = !((DataSourceDescriptor) dataSource).equalSettings(oldDataSource);
-        if (!sharedCredentials) {
-            // secret controller is responsible for notification, password changes applied after checks
-            WebServiceUtils.saveAuthProperties(
-                dataSource,
-                dataSource.getConnectionConfiguration(),
-                config.getCredentials(),
-                config.isSaveCredentials(),
-                config.isSharedCredentials()
-            );
-        }
-
-        WSDataSourceProperty property = getDatasourceEventProperty(oldDataSource, dataSource);
-
-        try {
-            sessionRegistry.updateDataSource(dataSource);
-            sessionRegistry.checkForErrors();
-        } catch (DBException e) {
-            throw new DBWebException("Failed to update connection", e);
-        }
-        if (sendEvent) {
-            WebEventUtils.addDataSourceUpdatedEvent(
-                webSession.getProjectById(projectId),
-                webSession,
-                connectionInfo.getId(),
-                WSConstants.EventAction.UPDATE,
-                property
-            );
-        }
-        return connectionInfo;
+        return WebAppUtils.getWebApplication().getConnectionController().updateConnection(webSession, projectId, config);
     }
 
     private WSDataSourceProperty getDatasourceEventProperty(
@@ -594,21 +480,8 @@ public class WebServiceCore implements DBWServiceCore {
     public boolean deleteConnection(
         @NotNull WebSession webSession, @Nullable String projectId, @NotNull String connectionId
     ) throws DBWebException {
-        WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, connectionId);
-        if (connectionInfo.getDataSourceContainer().getProject() != getProjectById(webSession, projectId)) {
-            throw new DBWebException("Global connection '" + connectionInfo.getName() + "' configuration cannot be deleted");
-        }
-        webSession.addInfoMessage("Delete connection - " +
-            WebServiceUtils.getConnectionContainerInfo(connectionInfo.getDataSourceContainer()));
-        closeAndDeleteConnection(webSession, projectId, connectionId, true);
-        WebEventUtils.addDataSourceUpdatedEvent(
-            webSession.getProjectById(projectId),
-            webSession,
-            connectionId,
-            WSConstants.EventAction.DELETE,
-            WSDataSourceProperty.CONFIGURATION
-        );
-        return true;
+        return WebAppUtils.getWebApplication().getConnectionController().deleteConnection(webSession, projectId, connectionId);
+
     }
 
     @Override

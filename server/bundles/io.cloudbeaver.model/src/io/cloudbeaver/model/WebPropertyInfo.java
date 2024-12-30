@@ -44,6 +44,8 @@ public class WebPropertyInfo {
     private DBPPropertySource propertySource;
     private boolean showProtected;
 
+    private Object[] validValues;
+
     public WebPropertyInfo(WebSession session, DBPPropertyDescriptor property, DBPPropertySource propertySource) {
         this.session = session;
         this.property = property;
@@ -251,5 +253,9 @@ public class WebPropertyInfo {
             return productSettingDescriptor.getScopes();
         }
         return null;
+    }
+
+    public void setValidValues(Object[] validValues) {
+        this.validValues = validValues;
     }
 }
