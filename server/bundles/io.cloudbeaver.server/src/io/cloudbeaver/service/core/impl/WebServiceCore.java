@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2025 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -580,77 +580,7 @@ public class WebServiceCore implements DBWServiceCore {
     public WebConnectionInfo testConnection(
         @NotNull WebSession webSession, @Nullable String projectId, @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException {
-        String connectionId = connectionConfig.getConnectionId();
-
-        connectionConfig.setSaveCredentials(true); // It is used in createConnectionFromConfig
-
-        DataSourceDescriptor dataSource = (DataSourceDescriptor) WebDataSourceUtils.getLocalOrGlobalDataSource(
-            webSession, projectId, connectionId);
-
-        WebProjectImpl project = getProjectById(webSession, projectId);
-        DBPDataSourceRegistry sessionRegistry = project.getDataSourceRegistry();
-        DataSourceDescriptor testDataSource;
-        if (dataSource != null) {
-            try {
-                // Check that creds are saved to trigger secrets resolve
-                dataSource.isCredentialsSaved();
-            } catch (DBException e) {
-                throw new DBWebException("Can't determine whether datasource credentials are saved", e);
-            }
-
-            testDataSource = (DataSourceDescriptor) dataSource.createCopy(dataSource.getRegistry());
-            WebServiceUtils.setConnectionConfiguration(
-                testDataSource.getDriver(),
-                testDataSource.getConnectionConfiguration(),
-                connectionConfig
-            );
-            if (connectionConfig.getSelectedSecretId() != null) {
-                try {
-                    dataSource.listSharedCredentials()
-                        .stream()
-                        .filter(secret -> connectionConfig.getSelectedSecretId().equals(secret.getSubjectId()))
-                        .findFirst()
-                        .ifPresent(testDataSource::setSelectedSharedCredentials);
-
-                } catch (DBException e) {
-                    throw new DBWebException("Failed to load secret value: " + connectionConfig.getSelectedSecretId());
-                }
-            }
-            WebServiceUtils.saveAuthProperties(
-                testDataSource,
-                testDataSource.getConnectionConfiguration(),
-                connectionConfig.getCredentials(),
-                true,
-                false,
-                true
-            );
-        } else {
-            testDataSource = (DataSourceDescriptor) WebServiceUtils.createConnectionFromConfig(connectionConfig,
-                sessionRegistry);
-        }
-        webSession.provideAuthParameters(webSession.getProgressMonitor(),
-            testDataSource,
-            testDataSource.getConnectionConfiguration());
-        testDataSource.setSavePassword(true); // We need for test to avoid password callback
-        if (DataSourceDescriptor.class.isAssignableFrom(testDataSource.getClass())) {
-            testDataSource.setAccessCheckRequired(!webSession.hasPermission(DBWConstants.PERMISSION_ADMIN));
-        }
-        try {
-            ConnectionTestJob ct = new ConnectionTestJob(testDataSource, param -> {
-            });
-            ct.run(webSession.getProgressMonitor());
-            if (ct.getConnectError() != null) {
-                throw new DBWebException("Connection failed", ct.getConnectError());
-            }
-            WebConnectionInfo connectionInfo = new WebConnectionInfo(webSession, testDataSource);
-            connectionInfo.setConnectError(ct.getConnectError());
-            connectionInfo.setServerVersion(ct.getServerVersion());
-            connectionInfo.setClientVersion(ct.getClientVersion());
-            connectionInfo.setConnectTime(RuntimeUtils.formatExecutionTime(ct.getConnectTime()));
-            return connectionInfo;
-        } catch (DBException e) {
-            throw new DBWebException("Error connecting to database", e);
-        }
+        return WebAppUtils.getWebApplication().getConnectionController().testConnection(webSession, projectId, connectionConfig);
     }
 
     @Override
