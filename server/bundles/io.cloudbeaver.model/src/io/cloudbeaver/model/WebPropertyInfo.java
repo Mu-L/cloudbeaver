@@ -1,6 +1,6 @@
 /*
  * DBeaver - Universal Database Manager
- * Copyright (C) 2010-2024 DBeaver Corp and others
+ * Copyright (C) 2010-2025 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,8 @@ public class WebPropertyInfo {
     private boolean showProtected;
 
     private Object[] validValues;
+
+    private String[] supportedConfigurationTypes = new String[0];
 
     public WebPropertyInfo(WebSession session, DBPPropertyDescriptor property, DBPPropertySource propertySource) {
         this.session = session;
@@ -156,9 +158,9 @@ public class WebPropertyInfo {
                 }
                 return validValues;
             }
-            return null;
+            return validValues;
         }
-        return null;
+        return validValues;
     }
 
     @Property
@@ -174,7 +176,7 @@ public class WebPropertyInfo {
                 .map(DBPDriverConfigurationType::toString)
                 .toArray(String[]::new);
         }
-        return new String[0];
+        return supportedConfigurationTypes;
     }
 
     @Property
@@ -255,7 +257,13 @@ public class WebPropertyInfo {
         return null;
     }
 
+    //TODO: delete after refactoring on front-end
     public void setValidValues(Object[] validValues) {
         this.validValues = validValues;
+    }
+
+    //TODO: delete after refactoring on front-end
+    public void setSupportedConfigurationTypes(String[] supportedConfigurationTypes) {
+        this.supportedConfigurationTypes = supportedConfigurationTypes;
     }
 }
