@@ -24,31 +24,55 @@ import io.cloudbeaver.model.WebPropertyInfo;
 import io.cloudbeaver.model.session.WebSession;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
+import org.jkiss.dbeaver.model.DBPDataSourceContainer;
+import org.jkiss.dbeaver.model.app.DBPDataSourceRegistry;
+import org.jkiss.dbeaver.registry.DataSourceDescriptor;
 
-import java.util.Map;
 
 public interface ConnectionController {
 
-    WebConnectionInfo createConnection(
+    DBPDataSourceContainer createDataSourceContainer(
         @NotNull WebSession webSession,
         @Nullable @WebObjectId String projectId,
         @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException;
 
-    WebConnectionInfo updateConnection(
+    WebConnectionInfo createConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        DBPDataSourceRegistry sessionRegistry,
+        DBPDataSourceContainer newDataSource
+    ) throws DBWebException;
+
+    DBPDataSourceContainer getDatasourceConnection(
         @NotNull WebSession webSession,
         @Nullable @WebObjectId String projectId,
         @NotNull WebConnectionConfig connectionConfig) throws DBWebException;
+
+    WebConnectionInfo updateConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig config,
+        DBPDataSourceContainer dataSource,
+        DBPDataSourceRegistry sessionRegistry
+    ) throws DBWebException;
 
     boolean deleteConnection(
         @NotNull WebSession webSession,
         @Nullable @WebObjectId String projectId,
         @NotNull String connectionId) throws DBWebException;
 
-    WebConnectionInfo testConnection(
+    DataSourceDescriptor prepareTestConnection(
         @NotNull WebSession webSession,
         @Nullable String projectId,
         @NotNull WebConnectionConfig connectionConfig) throws DBWebException;
+
+    WebConnectionInfo testConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig connectionConfig,
+        DataSourceDescriptor dataSource
+    ) throws DBWebException;
 
     WebPropertyInfo[] getExternalInfo(WebSession webSession);
 }

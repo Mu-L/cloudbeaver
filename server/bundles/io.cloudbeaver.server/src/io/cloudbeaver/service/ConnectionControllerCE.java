@@ -44,7 +44,7 @@ public class ConnectionControllerCE implements ConnectionController {
 
 
     @Override
-    public WebConnectionInfo createConnection(
+    public DBPDataSourceContainer createDataSourceContainer(
         @NotNull WebSession webSession,
         @Nullable String projectId,
         @NotNull WebConnectionConfig connectionConfig
@@ -69,7 +69,18 @@ public class ConnectionControllerCE implements ConnectionController {
         if (CommonUtils.isEmpty(newDataSource.getName())) {
             newDataSource.setName(CommonUtils.notNull(connectionConfig.getName(), "NewConnection"));
         }
+        return newDataSource;
+    }
 
+    @Override
+    @NotNull
+    public WebConnectionInfo createConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        DBPDataSourceRegistry sessionRegistry,
+        DBPDataSourceContainer newDataSource
+    ) throws DBWebException {
+        WebSessionProjectImpl project = getProjectById(webSession, projectId);
         try {
             sessionRegistry.addDataSource(newDataSource);
 
@@ -93,7 +104,7 @@ public class ConnectionControllerCE implements ConnectionController {
     }
 
     @Override
-    public WebConnectionInfo updateConnection(
+    public DBPDataSourceContainer getDatasourceConnection(
         @NotNull WebSession webSession,
         @Nullable String projectId,
         @NotNull WebConnectionConfig config
@@ -107,9 +118,7 @@ public class ConnectionControllerCE implements ConnectionController {
         WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, config.getConnectionId());
         DBPDataSourceContainer dataSource = connectionInfo.getDataSourceContainer();
         webSession.addInfoMessage("Update connection - " + WebServiceUtils.getConnectionContainerInfo(dataSource));
-        DataSourceDescriptor oldDataSource;
-        oldDataSource = dataSource.getRegistry().createDataSource(dataSource);
-        oldDataSource.setId(dataSource.getId());
+        getOldDataSource(dataSource);
         if (!CommonUtils.isEmpty(config.getName())) {
             dataSource.setName(config.getName());
         }
@@ -131,8 +140,7 @@ public class ConnectionControllerCE implements ConnectionController {
         // we should check that the config has changed but not check for password changes
         dataSource.setSharedCredentials(config.isSharedCredentials());
         dataSource.setSavePassword(config.isSaveCredentials());
-        boolean sharedCredentials = dataSource.isSharedCredentials() || !dataSource.getProject()
-            .isUseSecretStorage() && dataSource.isSavePassword();
+        boolean sharedCredentials = isSharedCredentials(dataSource);
         if (sharedCredentials) {
             //we must notify about the shared password change
             WebServiceUtils.saveAuthProperties(
@@ -143,8 +151,33 @@ public class ConnectionControllerCE implements ConnectionController {
                 config.isSharedCredentials()
             );
         }
-        boolean sendEvent = !((DataSourceDescriptor) dataSource).equalSettings(oldDataSource);
-        if (!sharedCredentials) {
+        // same here
+        return dataSource;
+    }
+
+    private static boolean isSharedCredentials(DBPDataSourceContainer dataSource) {
+        return dataSource.isSharedCredentials() || !dataSource.getProject()
+            .isUseSecretStorage() && dataSource.isSavePassword();
+    }
+
+    private static DataSourceDescriptor getOldDataSource(DBPDataSourceContainer dataSource) {
+        DataSourceDescriptor oldDataSource;
+        oldDataSource = dataSource.getRegistry().createDataSource(dataSource);
+        oldDataSource.setId(dataSource.getId());
+        return oldDataSource;
+    }
+
+    @Override
+    public WebConnectionInfo updateConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig config,
+        DBPDataSourceContainer dataSource,
+        DBPDataSourceRegistry sessionRegistry
+    ) throws DBWebException {
+        WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, config.getConnectionId());
+        boolean sendEvent = !((DataSourceDescriptor) dataSource).equalSettings(getOldDataSource(dataSource));
+        if (!isSharedCredentials(dataSource)) {
             // secret controller is responsible for notification, password changes applied after checks
             WebServiceUtils.saveAuthProperties(
                 dataSource,
@@ -155,7 +188,7 @@ public class ConnectionControllerCE implements ConnectionController {
             );
         }
 
-        WSDataSourceProperty property = getDatasourceEventProperty(oldDataSource, dataSource);
+        WSDataSourceProperty property = getDatasourceEventProperty(getOldDataSource(dataSource), dataSource);
 
         try {
             sessionRegistry.updateDataSource(dataSource);
@@ -197,7 +230,11 @@ public class ConnectionControllerCE implements ConnectionController {
     }
 
     @Override
-    public WebConnectionInfo testConnection(@NotNull WebSession webSession, @Nullable String projectId, @NotNull WebConnectionConfig connectionConfig) throws DBWebException {
+    public DataSourceDescriptor prepareTestConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig connectionConfig
+    ) throws DBWebException {
         String connectionId = connectionConfig.getConnectionId();
 
         connectionConfig.setSaveCredentials(true); // It is used in createConnectionFromConfig
@@ -246,6 +283,17 @@ public class ConnectionControllerCE implements ConnectionController {
             testDataSource = (DataSourceDescriptor) WebServiceUtils.createConnectionFromConfig(connectionConfig,
                 sessionRegistry);
         }
+        return testDataSource;
+    }
+
+    @Override
+    @NotNull
+    public WebConnectionInfo testConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig connectionConfig,
+        DataSourceDescriptor testDataSource
+    ) throws DBWebException {
         webSession.provideAuthParameters(webSession.getProgressMonitor(),
             testDataSource,
             testDataSource.getConnectionConfiguration());

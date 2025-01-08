@@ -50,7 +50,6 @@ import org.jkiss.dbeaver.model.net.DBWHandlerType;
 import org.jkiss.dbeaver.model.net.DBWNetworkHandler;
 import org.jkiss.dbeaver.model.net.DBWTunnel;
 import org.jkiss.dbeaver.model.net.ssh.SSHSession;
-import org.jkiss.dbeaver.model.rm.RMProjectType;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.secret.DBSSecretController;
 import org.jkiss.dbeaver.model.secret.DBSSecretValue;
@@ -62,8 +61,6 @@ import org.jkiss.dbeaver.registry.DataSourceProviderRegistry;
 import org.jkiss.dbeaver.registry.network.NetworkHandlerDescriptor;
 import org.jkiss.dbeaver.registry.network.NetworkHandlerRegistry;
 import org.jkiss.dbeaver.registry.settings.ProductSettingsRegistry;
-import org.jkiss.dbeaver.runtime.jobs.ConnectionTestJob;
-import org.jkiss.dbeaver.utils.RuntimeUtils;
 import org.jkiss.utils.CommonUtils;
 
 import java.util.*;
@@ -447,7 +444,14 @@ public class WebServiceCore implements DBWServiceCore {
         @Nullable String projectId,
         @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException {
-        return WebAppUtils.getWebApplication().getConnectionController().createConnection(webSession, projectId, connectionConfig);
+        DBPDataSourceContainer dataSourceContainer =
+            WebAppUtils.getWebApplication().getConnectionController().createDataSourceContainer(webSession, projectId, connectionConfig);
+        return WebAppUtils.getWebApplication().getConnectionController().createConnection(
+            webSession,
+            projectId,
+            dataSourceContainer.getRegistry(),
+            dataSourceContainer
+        );
     }
 
     @Override
@@ -456,7 +460,15 @@ public class WebServiceCore implements DBWServiceCore {
         @Nullable String projectId,
         @NotNull WebConnectionConfig config
     ) throws DBWebException {
-        return WebAppUtils.getWebApplication().getConnectionController().updateConnection(webSession, projectId, config);
+        DBPDataSourceContainer dataSourceContainer =
+            WebAppUtils.getWebApplication().getConnectionController().getDatasourceConnection(webSession, projectId, config);
+        return WebAppUtils.getWebApplication().getConnectionController().updateConnection(
+            webSession,
+            projectId,
+            config,
+            dataSourceContainer,
+            dataSourceContainer.getRegistry()
+        );
     }
 
     private WSDataSourceProperty getDatasourceEventProperty(
@@ -580,7 +592,10 @@ public class WebServiceCore implements DBWServiceCore {
     public WebConnectionInfo testConnection(
         @NotNull WebSession webSession, @Nullable String projectId, @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException {
-        return WebAppUtils.getWebApplication().getConnectionController().testConnection(webSession, projectId, connectionConfig);
+        DataSourceDescriptor dataSourceDescriptor = WebAppUtils.getWebApplication().getConnectionController()
+            .prepareTestConnection(webSession, projectId, connectionConfig);
+        return WebAppUtils.getWebApplication().getConnectionController()
+            .testConnection(webSession, projectId, connectionConfig, dataSourceDescriptor);
     }
 
     @Override
