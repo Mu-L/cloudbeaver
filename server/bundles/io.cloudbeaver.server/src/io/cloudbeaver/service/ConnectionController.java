@@ -74,5 +74,11 @@ public interface ConnectionController {
         DataSourceDescriptor dataSource
     ) throws DBWebException;
 
+    WebConnectionInfo getConnectionState(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull String connectionId
+    ) throws DBWebException;
+
     WebPropertyInfo[] getExternalInfo(WebSession webSession);
 }

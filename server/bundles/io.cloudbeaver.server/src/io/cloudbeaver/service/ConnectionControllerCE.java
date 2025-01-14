@@ -378,6 +378,15 @@ public class ConnectionControllerCE implements ConnectionController {
         return connectionInfo;
     }
 
+    @Override
+    public WebConnectionInfo getConnectionState(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull String connectionId
+    ) throws DBWebException {
+        return WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, connectionId);
+    }
+
     public WebPropertyInfo[] getExternalInfo(WebSession session) {
         return null;
     }
