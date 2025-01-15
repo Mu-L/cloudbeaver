@@ -323,7 +323,7 @@ public class WebServiceCore implements DBWServiceCore {
         @Nullable String projectId,
         @NotNull String connectionId
     ) throws DBWebException {
-        return  WebAppUtils.getWebApplication().getConnectionController().getConnectionState(webSession, projectId, connectionId);
+        return WebAppUtils.getWebApplication().getConnectionController().getConnectionState(webSession, projectId, connectionId);
     }
 
 
