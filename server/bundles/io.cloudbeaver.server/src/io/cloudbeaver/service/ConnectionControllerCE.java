@@ -30,10 +30,12 @@ import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.DBPDataSourceContainer;
 import org.jkiss.dbeaver.model.app.DBPDataSourceRegistry;
+import org.jkiss.dbeaver.model.exec.DBCConnectException;
 import org.jkiss.dbeaver.model.rm.RMProjectType;
 import org.jkiss.dbeaver.model.websocket.WSConstants;
 import org.jkiss.dbeaver.model.websocket.event.datasource.WSDataSourceProperty;
 import org.jkiss.dbeaver.registry.DataSourceDescriptor;
+import org.jkiss.dbeaver.runtime.DBWorkbench;
 import org.jkiss.dbeaver.runtime.jobs.ConnectionTestJob;
 import org.jkiss.dbeaver.utils.RuntimeUtils;
 import org.jkiss.utils.CommonUtils;
@@ -294,6 +296,7 @@ public class ConnectionControllerCE implements ConnectionController {
         @NotNull WebConnectionConfig connectionConfig,
         DataSourceDescriptor testDataSource
     ) throws DBWebException {
+        validateDriverLibrariesPresence(testDataSource);
         webSession.provideAuthParameters(webSession.getProgressMonitor(),
             testDataSource,
             testDataSource.getConnectionConfiguration());
@@ -306,6 +309,12 @@ public class ConnectionControllerCE implements ConnectionController {
             });
             ct.run(webSession.getProgressMonitor());
             if (ct.getConnectError() != null) {
+                if (ct.getConnectError() instanceof DBCConnectException error) {
+                    Throwable rootCause = CommonUtils.getRootCause(error);
+                    if (rootCause instanceof ClassNotFoundException) {
+                        throwDriverNotFoundException(testDataSource);
+                    }
+                }
                 throw new DBWebException("Connection failed", ct.getConnectError());
             }
             WebConnectionInfo connectionInfo = new WebConnectionInfo(webSession, testDataSource);
@@ -389,5 +398,18 @@ public class ConnectionControllerCE implements ConnectionController {
 
     public WebPropertyInfo[] getExternalInfo(WebSession session) {
         return null;
+    }
+
+
+    private void validateDriverLibrariesPresence(@NotNull DBPDataSourceContainer container) throws DBWebException {
+        if (!DBWorkbench.isDistributed() && container.getDriver().needsExternalDependencies()) {
+            throwDriverNotFoundException(container);
+        }
+    }
+
+    @NotNull
+    private static String throwDriverNotFoundException(@NotNull DBPDataSourceContainer container) throws DBWebException {
+        throw new DBWebException("Driver files for %s are not found. Please ask the administrator to download it."
+            .formatted(container.getDriver().getName()));
     }
 }

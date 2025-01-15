@@ -596,7 +596,9 @@ public class WebServiceCore implements DBWServiceCore {
 
     @Override
     public WebConnectionInfo testConnection(
-        @NotNull WebSession webSession, @Nullable String projectId, @NotNull WebConnectionConfig connectionConfig
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull WebConnectionConfig connectionConfig
     ) throws DBWebException {
         DataSourceDescriptor dataSourceDescriptor = WebAppUtils.getWebApplication().getConnectionController()
             .prepareTestConnection(webSession, projectId, connectionConfig);
