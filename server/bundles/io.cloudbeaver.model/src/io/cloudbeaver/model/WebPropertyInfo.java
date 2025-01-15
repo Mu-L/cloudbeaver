@@ -266,4 +266,6 @@ public class WebPropertyInfo {
     public void setSupportedConfigurationTypes(String[] supportedConfigurationTypes) {
         this.supportedConfigurationTypes = supportedConfigurationTypes;
     }
+
+
 }
