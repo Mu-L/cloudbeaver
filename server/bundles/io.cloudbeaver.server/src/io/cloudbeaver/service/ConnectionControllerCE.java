@@ -120,9 +120,7 @@ public class ConnectionControllerCE implements ConnectionController {
         WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, config.getConnectionId());
         DBPDataSourceContainer dataSource = connectionInfo.getDataSourceContainer();
         webSession.addInfoMessage("Update connection - " + WebServiceUtils.getConnectionContainerInfo(dataSource));
-        DataSourceDescriptor oldDataSource;
-        oldDataSource = dataSource.getRegistry().createDataSource(dataSource);
-        oldDataSource.setId(dataSource.getId());
+        getOldDataSource(dataSource);
         if (!CommonUtils.isEmpty(config.getName())) {
             dataSource.setName(config.getName());
         }
@@ -156,6 +154,7 @@ public class ConnectionControllerCE implements ConnectionController {
                 config.isSharedCredentials()
             );
         }
+        connectionInfo.setCredentialsSavedInSession(null);
         // same here
         return dataSource;
     }
