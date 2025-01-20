@@ -142,8 +142,7 @@ public class ConnectionControllerCE implements ConnectionController {
         // we should check that the config has changed but not check for password changes
         dataSource.setSharedCredentials(config.isSharedCredentials());
         dataSource.setSavePassword(config.isSaveCredentials());
-        boolean sharedCredentials = dataSource.isSharedCredentials() || !dataSource.getProject()
-            .isUseSecretStorage() && dataSource.isSavePassword();
+        boolean sharedCredentials = isSharedCredentials(dataSource);
         if (sharedCredentials) {
             //we must notify about the shared password change
             WebServiceUtils.saveAuthProperties(
