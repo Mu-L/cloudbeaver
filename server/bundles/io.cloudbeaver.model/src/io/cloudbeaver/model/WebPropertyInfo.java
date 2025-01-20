@@ -48,6 +48,8 @@ public class WebPropertyInfo {
 
     private String[] supportedConfigurationTypes = new String[0];
 
+    private Object defaultValue;
+
     public WebPropertyInfo(WebSession session, DBPPropertyDescriptor property, DBPPropertySource propertySource) {
         this.session = session;
         this.property = property;
@@ -127,7 +129,7 @@ public class WebPropertyInfo {
 
     @Property
     public Object getDefaultValue() throws DBException {
-        var defaultValue = property.getDefaultValue();
+        var defaultValue = property.getDefaultValue() == null ? this.defaultValue : property.getDefaultValue();
         return defaultValue == null ? getValue() : defaultValue;
     }
 
@@ -257,6 +259,10 @@ public class WebPropertyInfo {
         return null;
     }
 
+    //TODO: delete after refactoring on front-end
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
     //TODO: delete after refactoring on front-end
     public void setValidValues(Object[] validValues) {
         this.validValues = validValues;

@@ -39,6 +39,7 @@ import org.jkiss.utils.CommonUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -256,17 +257,19 @@ public class WebDatabaseDriverInfo {
 
     @Property
     public WebPropertyInfo[] getProviderProperties() {
-        WebPropertyInfo[] additionalWebProperty = WebAppUtils.getWebApplication().getConnectionController().getExternalInfo(webSession);
+        WebPropertyInfo[] additionalWebProperty = Optional.of(WebAppUtils.getWebApplication())
+            .filter(app -> app.getAppConfiguration().isSecretManagerEnabled())
+            .map(app -> app.getConnectionController().getExternalInfo(webSession))
+            .orElse(new WebPropertyInfo[0]);
+
         WebPropertyInfo[] providerProperties = Arrays.stream(driver.getProviderPropertyDescriptors())
             .map(p -> new WebPropertyInfo(webSession, p, null))
             .toArray(WebPropertyInfo[]::new);
 
-        WebPropertyInfo[] combinedProperties = Stream.concat(
+        return Stream.concat(
             Arrays.stream(additionalWebProperty),
             Arrays.stream(providerProperties)
         ).toArray(WebPropertyInfo[]::new);
-
-        return combinedProperties;
     }
 
     @Property
