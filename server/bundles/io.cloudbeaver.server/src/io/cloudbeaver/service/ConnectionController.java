@@ -20,13 +20,18 @@ import io.cloudbeaver.DBWebException;
 import io.cloudbeaver.WebObjectId;
 import io.cloudbeaver.model.WebConnectionConfig;
 import io.cloudbeaver.model.WebConnectionInfo;
+import io.cloudbeaver.model.WebNetworkHandlerConfigInput;
 import io.cloudbeaver.model.WebPropertyInfo;
 import io.cloudbeaver.model.session.WebSession;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
+import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.model.DBPDataSourceContainer;
 import org.jkiss.dbeaver.model.app.DBPDataSourceRegistry;
 import org.jkiss.dbeaver.registry.DataSourceDescriptor;
+
+import java.util.List;
+import java.util.Map;
 
 
 public interface ConnectionController {
@@ -78,6 +83,19 @@ public interface ConnectionController {
         @NotNull WebSession webSession,
         @Nullable String projectId,
         @NotNull String connectionId
+    ) throws DBWebException;
+
+    DBPDataSourceContainer getDataSourceContainer(WebConnectionInfo connectionInfo) throws DBException;
+
+    WebConnectionInfo initConnection(
+        @NotNull WebSession webSession,
+        @Nullable String projectId,
+        @NotNull String connectionId,
+        @NotNull Map<String, Object> authProperties,
+        @Nullable List<WebNetworkHandlerConfigInput> networkCredentials,
+        boolean saveCredentials,
+        boolean sharedCredentials,
+        @Nullable String selectedSecretId
     ) throws DBWebException;
 
     WebPropertyInfo[] getExternalInfo(WebSession webSession);

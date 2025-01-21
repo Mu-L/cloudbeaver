@@ -19,6 +19,7 @@ package io.cloudbeaver.service;
 import io.cloudbeaver.*;
 import io.cloudbeaver.model.WebConnectionConfig;
 import io.cloudbeaver.model.WebConnectionInfo;
+import io.cloudbeaver.model.WebNetworkHandlerConfigInput;
 import io.cloudbeaver.model.WebPropertyInfo;
 import io.cloudbeaver.model.session.WebSession;
 import io.cloudbeaver.utils.ServletAppUtils;
@@ -31,14 +32,23 @@ import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.DBPDataSourceContainer;
 import org.jkiss.dbeaver.model.app.DBPDataSourceRegistry;
 import org.jkiss.dbeaver.model.exec.DBCConnectException;
+import org.jkiss.dbeaver.model.net.DBWHandlerConfiguration;
+import org.jkiss.dbeaver.model.net.DBWHandlerType;
 import org.jkiss.dbeaver.model.rm.RMProjectType;
+import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
+import org.jkiss.dbeaver.model.secret.DBSSecretController;
+import org.jkiss.dbeaver.model.secret.DBSSecretValue;
 import org.jkiss.dbeaver.model.websocket.WSConstants;
+import org.jkiss.dbeaver.model.websocket.event.datasource.WSDataSourceConnectEvent;
 import org.jkiss.dbeaver.model.websocket.event.datasource.WSDataSourceProperty;
 import org.jkiss.dbeaver.registry.DataSourceDescriptor;
 import org.jkiss.dbeaver.runtime.DBWorkbench;
 import org.jkiss.dbeaver.runtime.jobs.ConnectionTestJob;
 import org.jkiss.dbeaver.utils.RuntimeUtils;
 import org.jkiss.utils.CommonUtils;
+
+import java.util.List;
+import java.util.Map;
 
 public class ConnectionControllerCE implements ConnectionController {
 
@@ -395,6 +405,118 @@ public class ConnectionControllerCE implements ConnectionController {
         @NotNull String connectionId
     ) throws DBWebException {
         return WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, connectionId);
+    }
+
+    @Override
+    public DBPDataSourceContainer getDataSourceContainer(WebConnectionInfo connectionInfo) throws DBWebException {
+        return connectionInfo.getDataSourceContainer();
+    }
+
+    @Override
+    public WebConnectionInfo initConnection(@NotNull WebSession webSession, @Nullable String projectId, @NotNull String connectionId, @NotNull Map<String, Object> authProperties, @Nullable List<WebNetworkHandlerConfigInput> networkCredentials, boolean saveCredentials, boolean sharedCredentials, @Nullable String selectedSecretId) throws DBWebException {
+        WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, connectionId);
+        connectionInfo.setSavedCredentials(authProperties, networkCredentials);
+
+        var dataSourceContainer = getDataSourceContainer(connectionInfo);
+        if (dataSourceContainer.isConnected()) {
+            throw new DBWebException("Datasource '" + dataSourceContainer.getName() + "' is already connected");
+        }
+        if (dataSourceContainer.isSharedCredentials() && selectedSecretId != null) {
+            List<DBSSecretValue> allSecrets;
+            try {
+                allSecrets = dataSourceContainer.listSharedCredentials();
+            } catch (DBException e) {
+                throw new DBWebException("Error loading connection secret", e);
+            }
+            DBSSecretValue selectedSecret =
+                allSecrets.stream()
+                    .filter(secret -> selectedSecretId.equals(secret.getUniqueId()))
+                    .findFirst().orElse(null);
+            if (selectedSecret == null) {
+                throw new DBWebException("Secret not found:" + selectedSecretId);
+            }
+            dataSourceContainer.setSelectedSharedCredentials(selectedSecret);
+        }
+
+        boolean oldSavePassword = dataSourceContainer.isSavePassword();
+        DBRProgressMonitor monitor = webSession.getProgressMonitor();
+        validateDriverLibrariesPresence(dataSourceContainer);
+        try {
+            boolean connect = dataSourceContainer.connect(monitor, true, false);
+            if (connect) {
+                webSession.addSessionEvent(
+                    new WSDataSourceConnectEvent(
+                        projectId,
+                        connectionId,
+                        webSession.getSessionId(),
+                        webSession.getUserId()
+                    )
+                );
+            }
+        } catch (Exception e) {
+            throw new DBWebException("Error connecting to database", e);
+        } finally {
+            dataSourceContainer.setSavePassword(oldSavePassword);
+            connectionInfo.clearCache();
+        }
+        // Mark all specified network configs as saved
+        boolean[] saveConfig = new boolean[1];
+
+        if (networkCredentials != null) {
+            networkCredentials.forEach(c -> {
+                if (CommonUtils.toBoolean(c.isSavePassword())) {
+                    DBWHandlerConfiguration handlerCfg = dataSourceContainer.getConnectionConfiguration()
+                        .getHandler(c.getId());
+                    if (handlerCfg != null &&
+                        // check username param only for ssh config
+                        !(CommonUtils.isEmpty(c.getUserName()) && CommonUtils.equalObjects(handlerCfg.getType(),
+                            DBWHandlerType.TUNNEL))
+                    ) {
+                        WebDataSourceUtils.updateHandlerCredentials(handlerCfg, c);
+                        handlerCfg.setSavePassword(true);
+                        saveConfig[0] = true;
+                    }
+                }
+            });
+        }
+        if (saveCredentials) {
+            // Save all passed credentials in the datasource container
+            WebServiceUtils.saveAuthProperties(
+                dataSourceContainer,
+                dataSourceContainer.getConnectionConfiguration(),
+                authProperties,
+                true,
+                sharedCredentials
+            );
+
+            var project = dataSourceContainer.getProject();
+            if (project.isUseSecretStorage()) {
+                try {
+                    dataSourceContainer.persistSecrets(
+                        DBSSecretController.getProjectSecretController(dataSourceContainer.getProject())
+                    );
+                } catch (DBException e) {
+                    throw new DBWebException("Failed to save credentials", e);
+                }
+            }
+
+            WebDataSourceUtils.saveCredentialsInDataSource(connectionInfo,
+                dataSourceContainer,
+                dataSourceContainer.getConnectionConfiguration());
+            saveConfig[0] = true;
+        }
+        if (WebServiceUtils.isGlobalProject(dataSourceContainer.getProject())) {
+            // Do not flush config for global project (only admin can do it - CB-2415)
+            if (saveCredentials) {
+                connectionInfo.setCredentialsSavedInSession(true);
+            }
+            saveConfig[0] = false;
+        }
+        if (saveConfig[0]) {
+            dataSourceContainer.persistConfiguration();
+        }
+
+        return connectionInfo;
     }
 
     public WebPropertyInfo[] getExternalInfo(WebSession session) {
