@@ -85,8 +85,6 @@ public interface ConnectionController {
         @NotNull String connectionId
     ) throws DBWebException;
 
-    DBPDataSourceContainer getDataSourceContainer(WebConnectionInfo connectionInfo) throws DBException;
-
     WebConnectionInfo initConnection(
         @NotNull WebSession webSession,
         @Nullable String projectId,
@@ -97,6 +95,8 @@ public interface ConnectionController {
         boolean sharedCredentials,
         @Nullable String selectedSecretId
     ) throws DBWebException;
+
+    void validateConnection(DBPDataSourceContainer dataSourceContainer) throws DBWebException;
 
     WebPropertyInfo[] getExternalInfo(WebSession webSession);
 }

@@ -255,6 +255,8 @@ public class ConnectionControllerCE implements ConnectionController {
         DataSourceDescriptor dataSource = (DataSourceDescriptor) WebDataSourceUtils.getLocalOrGlobalDataSource(
             webSession, projectId, connectionId);
 
+        validateConnection(dataSource);
+
         WebProjectImpl project = getProjectById(webSession, projectId);
         DBPDataSourceRegistry sessionRegistry = project.getDataSourceRegistry();
         DataSourceDescriptor testDataSource;
@@ -408,16 +410,12 @@ public class ConnectionControllerCE implements ConnectionController {
     }
 
     @Override
-    public DBPDataSourceContainer getDataSourceContainer(WebConnectionInfo connectionInfo) throws DBWebException {
-        return connectionInfo.getDataSourceContainer();
-    }
-
-    @Override
     public WebConnectionInfo initConnection(@NotNull WebSession webSession, @Nullable String projectId, @NotNull String connectionId, @NotNull Map<String, Object> authProperties, @Nullable List<WebNetworkHandlerConfigInput> networkCredentials, boolean saveCredentials, boolean sharedCredentials, @Nullable String selectedSecretId) throws DBWebException {
         WebConnectionInfo connectionInfo = WebDataSourceUtils.getWebConnectionInfo(webSession, projectId, connectionId);
         connectionInfo.setSavedCredentials(authProperties, networkCredentials);
 
-        var dataSourceContainer = getDataSourceContainer(connectionInfo);
+        var dataSourceContainer = connectionInfo.getDataSourceContainer();;
+        validateConnection(dataSourceContainer);
         if (dataSourceContainer.isConnected()) {
             throw new DBWebException("Datasource '" + dataSourceContainer.getName() + "' is already connected");
         }
@@ -517,6 +515,10 @@ public class ConnectionControllerCE implements ConnectionController {
         }
 
         return connectionInfo;
+    }
+
+    @Override
+    public void validateConnection(DBPDataSourceContainer dataSourceContainer) throws DBWebException {
     }
 
     public WebPropertyInfo[] getExternalInfo(WebSession session) {
