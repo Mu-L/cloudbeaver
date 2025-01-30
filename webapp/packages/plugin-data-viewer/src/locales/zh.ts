@@ -74,6 +74,7 @@ export default [
   ['settings_data_editor_fetch_max_description', '最大查询数据行数'],
   ['settings_data_editor_fetch_default_name', '默认查询数量'],
   ['settings_data_editor_fetch_default_description', '默认查询数据行数'],
+  ['settings_data_editor_disable_number_formatting', 'Disable number formatting'],
   ['plugin_data_viewer_no_available_presentation', '无可用展示项'],
   ['plugin_data_viewer_result_set_save_success', '保存成功'],
 ];

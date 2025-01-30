@@ -7,6 +7,7 @@
  */
 import { ResultDataFormat } from '@cloudbeaver/core-sdk';
 
+import { DataViewerSettingsService } from '../../../DataViewerSettingsService.js';
 import { DatabaseDataAction } from '../../DatabaseDataAction.js';
 import type { IDatabaseDataSource } from '../../IDatabaseDataSource.js';
 import type { IDatabaseResultSet } from '../../IDatabaseResultSet.js';
@@ -41,11 +42,18 @@ export class ResultSetFormatAction
 
   private readonly view: ResultSetViewAction;
   private readonly edit: ResultSetEditAction;
+  private readonly settings: DataViewerSettingsService;
 
-  constructor(source: IDatabaseDataSource<any, IDatabaseResultSet>, view: ResultSetViewAction, edit: ResultSetEditAction) {
+  constructor(
+    source: IDatabaseDataSource<any, IDatabaseResultSet>,
+    view: ResultSetViewAction,
+    edit: ResultSetEditAction,
+    settings: DataViewerSettingsService,
+  ) {
     super(source);
     this.view = view;
     this.edit = edit;
+    this.settings = settings;
   }
 
   isReadOnly(key: IResultSetPartialKey): boolean {
@@ -92,6 +100,19 @@ export class ResultSetFormatAction
     return false;
   }
 
+  isNumber(key: IResultSetPartialKey): boolean {
+    if (!key.column) {
+      return false;
+    }
+
+    const column = this.view.getColumn(key.column);
+
+    if (column?.dataKind?.toLocaleLowerCase() === 'numeric') {
+      return true;
+    }
+
+    return false;
+  }
   isGeometry(key: IResultSetPartialKey) {
     if (key.column) {
       const column = this.view.getColumn(key.column);
@@ -249,6 +270,9 @@ export class ResultSetFormatAction
       return '[null]';
     }
 
+    if (this.isNumber(key) && !this.settings.numberFormattingDisabled) {
+      return Number(value).toLocaleString();
+    }
     return this.truncateText(String(value), DISPLAY_STRING_LENGTH);
   }
 

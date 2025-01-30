@@ -31,6 +31,7 @@ const defaultSettings = schema.object({
   'plugin.data-viewer.fetchMax': schema.coerce.number().min(FETCH_MIN).default(FETCH_MAX),
   'resultset.maxrows': schema.coerce.number().min(FETCH_MIN).max(FETCH_MAX).default(DEFAULT_FETCH_SIZE),
   'plugin.data-viewer.export.disabled': schemaExtra.stringedBoolean().default(false),
+  'plugin.data-viewer.format.number.disabled': schemaExtra.stringedBoolean().default(true),
 });
 
 export type DataViewerSettings = schema.infer<typeof defaultSettings>;
@@ -59,6 +60,10 @@ export class DataViewerSettingsService extends Dependency {
 
   get defaultFetchSize(): number {
     return this.settings.getValue('resultset.maxrows');
+  }
+
+  get numberFormattingDisabled(): boolean {
+    return this.settings.getValue('plugin.data-viewer.format.number.disabled');
   }
 
   readonly settings: SettingsProvider<typeof defaultSettings>;
@@ -153,6 +158,15 @@ export class DataViewerSettingsService extends Dependency {
           description: 'settings_data_editor_disable_data_export_description',
           access: {
             scope: ['server'],
+          },
+        },
+        {
+          group: DATA_EDITOR_SETTINGS_GROUP,
+          key: 'plugin.data-viewer.format.number.disabled',
+          type: ESettingsValueType.Checkbox,
+          name: 'settings_data_editor_disable_number_formatting',
+          access: {
+            scope: ['client'],
           },
         },
       ];

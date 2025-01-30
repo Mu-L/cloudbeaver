@@ -55,5 +55,6 @@ export default [
   ['settings_data_editor_fetch_max_description', 'Maximale Anzahl von Zeilen zum Abrufen'],
   ['settings_data_editor_fetch_default_name', 'Standard fetch size'],
   ['settings_data_editor_fetch_default_description', 'Standardnummer der Zeilen zum Abrufen'],
+  ['settings_data_editor_disable_number_formatting', 'Disable number formatting'],
   ['plugin_data_viewer_no_available_presentation', 'Keine verfügbare Präsentation'],
 ];

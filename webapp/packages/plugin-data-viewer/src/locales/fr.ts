@@ -76,5 +76,6 @@ export default [
   ['settings_data_editor_fetch_max_description', 'Nombre maximal de lignes à récupérer'],
   ['settings_data_editor_fetch_default_name', 'Taille de récupération par défaut'],
   ['settings_data_editor_fetch_default_description', 'Nombre par défaut de lignes à récupérer'],
+  ['settings_data_editor_disable_number_formatting', 'Disable number formatting'],
   ['plugin_data_viewer_no_available_presentation', 'Aucune présentation disponible'],
 ];
