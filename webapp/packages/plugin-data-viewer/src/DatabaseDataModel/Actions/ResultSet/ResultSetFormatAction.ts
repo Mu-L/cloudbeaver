@@ -43,6 +43,7 @@ export class ResultSetFormatAction
   private readonly view: ResultSetViewAction;
   private readonly edit: ResultSetEditAction;
   private readonly settings: DataViewerSettingsService;
+  private numberFormatter: Intl.NumberFormat | null;
 
   constructor(
     source: IDatabaseDataSource<any, IDatabaseResultSet>,
@@ -54,6 +55,7 @@ export class ResultSetFormatAction
     this.view = view;
     this.edit = edit;
     this.settings = settings;
+    this.numberFormatter = null;
   }
 
   isReadOnly(key: IResultSetPartialKey): boolean {
@@ -271,8 +273,10 @@ export class ResultSetFormatAction
     }
 
     if (this.isNumber(key) && !this.settings.numberFormattingDisabled) {
-      return Number(value).toLocaleString();
+      const formatter = this.getNumberFormatter();
+      return formatter.format(Number(value));
     }
+
     return this.truncateText(String(value), DISPLAY_STRING_LENGTH);
   }
 
@@ -282,5 +286,13 @@ export class ResultSetFormatAction
       .split('')
       .map(v => (v.charCodeAt(0) < 32 ? ' ' : v))
       .join('');
+  }
+
+  private getNumberFormatter() {
+    if (!this.numberFormatter) {
+      this.numberFormatter = new Intl.NumberFormat();
+    }
+
+    return this.numberFormatter;
   }
 }
