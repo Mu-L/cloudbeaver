@@ -1614,7 +1614,15 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
                         providerConfig.getParameters());
                     Map<SMAuthConfigurationReference, Object> authData = Map.of(new SMAuthConfigurationReference(authProviderId,
                         authProviderConfigurationId), filteredUserCreds);
-                    return SMAuthInfo.inProgress(authAttemptId, signInLink, signOutLink, authData, isMainSession, forceSessionsLogout);
+                    return SMAuthInfo.inProgress(
+                        authAttemptId,
+                        signInLink,
+                        signOutLink,
+                        authData,
+                        isMainSession,
+                        forceSessionsLogout,
+                        appSessionId
+                    );
                 }
                 txn.commit();
                 return finishAuthentication(
@@ -1625,7 +1633,8 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
                         Map.of(new SMAuthConfigurationReference(authProviderId, authProviderConfigurationId),
                             securedUserIdentifyingCredentials),
                         isMainSession,
-                        forceSessionsLogout
+                        forceSessionsLogout,
+                        appSessionId
                     ),
                     true,
                     forceSessionsLogout
@@ -1863,9 +1872,10 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
             String errorCode;
             boolean forceSessionsLogout;
             boolean isMainAuth;
+            String appSessionId;
             try (PreparedStatement dbStat = dbCon.prepareStatement(
                 database.normalizeTableNames(
-                    "SELECT AUTH_STATUS,AUTH_ERROR,SESSION_ID,IS_MAIN_AUTH,ERROR_CODE,FORCE_SESSION_LOGOUT" +
+                    "SELECT AUTH_STATUS,AUTH_ERROR,SESSION_ID,IS_MAIN_AUTH,ERROR_CODE,FORCE_SESSION_LOGOUT,APP_SESSION_ID" +
                             " FROM {table_prefix}CB_AUTH_ATTEMPT WHERE AUTH_ID=?"
                 )
             )) {
@@ -1880,6 +1890,7 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
                     isMainAuth = CHAR_BOOL_TRUE.equals(dbResult.getString(4));
                     errorCode = dbResult.getString(5);
                     forceSessionsLogout = CHAR_BOOL_TRUE.equals(dbResult.getString(6));
+                    appSessionId = dbResult.getString(7);
                 }
             }
             Map<SMAuthConfigurationReference, Object> authData = new LinkedHashMap<>();
@@ -1921,7 +1932,7 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
             if (smAuthStatus != SMAuthStatus.SUCCESS) {
                 return switch (smAuthStatus) {
                     case IN_PROGRESS ->
-                        SMAuthInfo.inProgress(authId, signInLink, signOutLink, authData, isMainAuth, forceSessionsLogout);
+                        SMAuthInfo.inProgress(authId, signInLink, signOutLink, authData, isMainAuth, forceSessionsLogout, appSessionId);
                     case ERROR -> SMAuthInfo.error(authId, authError, isMainAuth, errorCode);
                     case EXPIRED -> SMAuthInfo.expired(authId, readExpiredData ? authData : Map.of(), isMainAuth);
                     default -> throw new SMException("Unknown auth status:" + smAuthStatus);
