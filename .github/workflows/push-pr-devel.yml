@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build-server:
-    uses: dbeaver/dbeaver-common/.github/workflows/mvn-package.yml@3dd9915617a4b15fe2e1be6acffaa5532037e3f0
+    uses: dbeaver/dbeaver-common/.github/workflows/mvn-package.yml@98378c76fb68fc69864dedd0059991356836c043
     name: Check
     secrets: inherit
     with:
