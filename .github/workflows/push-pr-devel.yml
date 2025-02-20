@@ -25,7 +25,7 @@ jobs:
     secrets: inherit
     with:
       clean: ${{ inputs.mvn-clean || false }}
-      mvn-args: -Dplain-api-server -Dheadless-platform
+      mvn-args: -Dplain-api-server -Dheadless-platform -Drelease=21
       project-directory: ./cloudbeaver/server/product/aggregate
       project-deps: ./cloudbeaver/project.deps
       timeout-minutes: 5
