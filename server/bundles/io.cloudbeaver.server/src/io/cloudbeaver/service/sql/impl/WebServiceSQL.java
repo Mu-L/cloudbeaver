@@ -34,6 +34,7 @@ import org.jkiss.dbeaver.model.DBPDataSource;
 import org.jkiss.dbeaver.model.DBPDataSourceContainer;
 import org.jkiss.dbeaver.model.DBUtils;
 import org.jkiss.dbeaver.model.data.DBDAttributeBinding;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
 import org.jkiss.dbeaver.model.exec.DBCException;
 import org.jkiss.dbeaver.model.exec.DBCLogicalOperator;
 import org.jkiss.dbeaver.model.exec.DBExecUtils;
@@ -54,7 +55,6 @@ import org.jkiss.dbeaver.model.sql.parser.SQLParserContext;
 import org.jkiss.dbeaver.model.sql.parser.SQLScriptParser;
 import org.jkiss.dbeaver.model.sql.registry.SQLGeneratorConfigurationRegistry;
 import org.jkiss.dbeaver.model.sql.registry.SQLGeneratorDescriptor;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 import org.jkiss.dbeaver.model.struct.DBSObject;
 import org.jkiss.dbeaver.model.struct.DBSWrapper;
 import org.jkiss.dbeaver.utils.RuntimeUtils;
@@ -497,8 +497,8 @@ public class WebServiceSQL implements DBWServiceSQL {
                     monitor.beginTask("Read data", 1);
                     monitor.subTask("Extra data from " + nodePath);
 
-                    DBSDataContainer dataContainer = contextInfo.getProcessor().getDataContainerByNodePath(
-                        monitor, nodePath, DBSDataContainer.class);
+                    DBDDataContainer dataContainer = contextInfo.getProcessor().getDataContainerByNodePath(
+                        monitor, nodePath, DBDDataContainer.class);
 
                     WebSQLExecuteInfo executeResults = contextInfo.getProcessor().readDataFromContainer(
                         contextInfo,

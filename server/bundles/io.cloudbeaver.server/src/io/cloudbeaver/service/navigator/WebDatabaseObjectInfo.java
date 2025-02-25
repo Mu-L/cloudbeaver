@@ -25,6 +25,8 @@ import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.*;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
+import org.jkiss.dbeaver.model.data.DBDDataManipulator;
 import org.jkiss.dbeaver.model.meta.Property;
 import org.jkiss.dbeaver.model.rm.RMProjectPermission;
 import org.jkiss.dbeaver.model.struct.*;
@@ -33,7 +35,6 @@ import org.jkiss.dbeaver.model.struct.rdb.DBSSchema;
 import org.jkiss.dbeaver.model.struct.rdb.DBSTable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 
@@ -172,16 +173,16 @@ public class WebDatabaseObjectInfo {
         boolean isDiagramSupported = true;
         if (object instanceof DBPScriptObject) features.add(OBJECT_FEATURE_SCRIPT);
         if (object instanceof DBPScriptObjectExt) features.add(OBJECT_FEATURE_SCRIPT_EXTENDED);
-        if (object instanceof DBSDataContainer) {
+        if (object instanceof DBDDataContainer) {
             features.add(OBJECT_FEATURE_DATA_CONTAINER);
-            if (((DBSDataContainer) object).isFeatureSupported(DBSDataContainer.FEATURE_DATA_FILTER)) {
+            if (((DBDDataContainer) object).isFeatureSupported(DBDDataContainer.FEATURE_DATA_FILTER)) {
                 features.add(OBJECT_FEATURE_DATA_CONTAINER_SUPPORTS_FILTERS);
             }
-            if (((DBSDataContainer) object).isFeatureSupported(DBSDataContainer.FEATURE_KEY_VALUE)) {
+            if (((DBDDataContainer) object).isFeatureSupported(DBDDataContainer.FEATURE_KEY_VALUE)) {
                 isDiagramSupported = false;
             }
         }
-        if (object instanceof DBSDataManipulator) features.add(OBJECT_FEATURE_DATA_MANIPULATOR);
+        if (object instanceof DBDDataManipulator) features.add(OBJECT_FEATURE_DATA_MANIPULATOR);
         if (object instanceof DBSEntity) {
             features.add(OBJECT_FEATURE_ENTITY);
             if (object instanceof DBSDataType

@@ -17,25 +17,21 @@
 package io.cloudbeaver.service.sql;
 
 import org.jkiss.code.NotNull;
-import org.jkiss.dbeaver.model.data.DBDAttributeBindingMeta;
-import org.jkiss.dbeaver.model.data.DBDContent;
-import org.jkiss.dbeaver.model.data.DBDDataReceiver;
-import org.jkiss.dbeaver.model.data.DBDValue;
+import org.jkiss.dbeaver.model.data.*;
 import org.jkiss.dbeaver.model.exec.*;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 import org.jkiss.dbeaver.utils.ContentUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class WebSQLCellValueReceiver implements DBDDataReceiver {
-    protected final DBSDataContainer dataContainer;
+    protected final DBDDataContainer dataContainer;
     protected int rowIndex;
     protected DBDAttributeBindingMeta binding;
     protected Object value;
 
-    public WebSQLCellValueReceiver(DBSDataContainer dataContainer, int rowIndex) {
+    public WebSQLCellValueReceiver(DBDDataContainer dataContainer, int rowIndex) {
         this.dataContainer = dataContainer;
         this.rowIndex = rowIndex;
     }

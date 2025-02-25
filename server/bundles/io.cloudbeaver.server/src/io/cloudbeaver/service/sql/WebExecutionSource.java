@@ -16,12 +16,12 @@
  */
 package io.cloudbeaver.service.sql;
 
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
 import org.jkiss.dbeaver.model.exec.DBCExecutionContext;
 import org.jkiss.dbeaver.model.impl.AbstractExecutionSource;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 
 class WebExecutionSource extends AbstractExecutionSource {
-    public WebExecutionSource(DBSDataContainer dataContainer, DBCExecutionContext executionContext, Object controller) {
+    public WebExecutionSource(DBDDataContainer dataContainer, DBCExecutionContext executionContext, Object controller) {
         super(dataContainer, executionContext, controller);
     }
 }

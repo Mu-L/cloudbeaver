@@ -30,7 +30,6 @@ import org.jkiss.dbeaver.model.exec.trace.DBCTraceDynamic;
 import org.jkiss.dbeaver.model.impl.data.DBDValueError;
 import org.jkiss.dbeaver.model.meta.MetaData;
 import org.jkiss.dbeaver.model.sql.DBQuotaException;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 import org.jkiss.dbeaver.model.struct.DBSEntity;
 import org.jkiss.utils.CommonUtils;
 
@@ -42,7 +41,7 @@ class WebSQLQueryDataReceiver implements DBDDataReceiver {
     private static final Log log = Log.getLog(WebSQLQueryDataReceiver.class);
 
     private final WebSQLContextInfo contextInfo;
-    private final DBSDataContainer dataContainer;
+    private final DBDDataContainer dataContainer;
     private final WebDataFormat dataFormat;
     private final WebSQLQueryResultSet webResultSet = new WebSQLQueryResultSet();
 
@@ -51,7 +50,7 @@ class WebSQLQueryDataReceiver implements DBDDataReceiver {
     private List<WebSQLQueryResultSetRow> rows = new ArrayList<>();
     private final Number rowLimit;
 
-    WebSQLQueryDataReceiver(WebSQLContextInfo contextInfo, DBSDataContainer dataContainer, WebDataFormat dataFormat) {
+    WebSQLQueryDataReceiver(WebSQLContextInfo contextInfo, DBDDataContainer dataContainer, WebDataFormat dataFormat) {
         this.contextInfo = contextInfo;
         this.dataContainer = dataContainer;
         this.dataFormat = dataFormat;
@@ -157,7 +156,7 @@ class WebSQLQueryDataReceiver implements DBDDataReceiver {
         webResultSet.setColumns(bindings);
         webResultSet.setRows(List.of(rows.toArray(new WebSQLQueryResultSetRow[0])));
         webResultSet.setHasChildrenCollection(resultSet instanceof DBDSubCollectionResultSet);
-        webResultSet.setSupportsDataFilter(dataContainer.isFeatureSupported(DBSDataContainer.FEATURE_DATA_FILTER));
+        webResultSet.setSupportsDataFilter(dataContainer.isFeatureSupported(DBDDataContainer.FEATURE_DATA_FILTER));
         webResultSet.setHasDynamicTrace(trace instanceof DBCTraceDynamic);
 
         WebSQLResultsInfo resultsInfo = contextInfo.saveResult(dataContainer, trace, bindings, rows.size() == 1);

@@ -19,11 +19,15 @@ package io.cloudbeaver.service.sql;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.model.DBPDataSource;
+import org.jkiss.dbeaver.model.DBSDocumentContainer;
 import org.jkiss.dbeaver.model.DBUtils;
 import org.jkiss.dbeaver.model.data.DBDAttributeBinding;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
 import org.jkiss.dbeaver.model.data.DBDRowIdentifier;
 import org.jkiss.dbeaver.model.exec.trace.DBCTrace;
-import org.jkiss.dbeaver.model.struct.*;
+import org.jkiss.dbeaver.model.struct.DBSAttributeBase;
+import org.jkiss.dbeaver.model.struct.DBSEntity;
+import org.jkiss.dbeaver.model.struct.DBSTypedObject;
 
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +39,7 @@ import java.util.Set;
 public class WebSQLResultsInfo {
 
     @NotNull
-    private final DBSDataContainer dataContainer;
+    private final DBDDataContainer dataContainer;
     @NotNull
     private final String id;
     private DBDAttributeBinding[] attributes;
@@ -44,7 +48,7 @@ public class WebSQLResultsInfo {
     private DBCTrace trace;
     private String queryText;
 
-    public WebSQLResultsInfo(@NotNull DBSDataContainer dataContainer, @NotNull String id) {
+    public WebSQLResultsInfo(@NotNull DBDDataContainer dataContainer, @NotNull String id) {
         this.dataContainer = dataContainer;
         this.id = id;
     }
@@ -55,7 +59,7 @@ public class WebSQLResultsInfo {
     }
 
     @NotNull
-    public DBSDataContainer getDataContainer() {
+    public DBDDataContainer getDataContainer() {
         return dataContainer;
     }
 

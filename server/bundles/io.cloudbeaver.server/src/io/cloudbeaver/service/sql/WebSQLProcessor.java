@@ -29,6 +29,7 @@ import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.DBPDataKind;
 import org.jkiss.dbeaver.model.DBPDataSource;
+import org.jkiss.dbeaver.model.DBSDocumentLocator;
 import org.jkiss.dbeaver.model.DBUtils;
 import org.jkiss.dbeaver.model.data.*;
 import org.jkiss.dbeaver.model.edit.DBEPersistAction;
@@ -47,7 +48,9 @@ import org.jkiss.dbeaver.model.sql.*;
 import org.jkiss.dbeaver.model.sql.parser.SQLParserContext;
 import org.jkiss.dbeaver.model.sql.parser.SQLRuleManager;
 import org.jkiss.dbeaver.model.sql.parser.SQLScriptParser;
-import org.jkiss.dbeaver.model.struct.*;
+import org.jkiss.dbeaver.model.struct.DBSAttributeBase;
+import org.jkiss.dbeaver.model.struct.DBSEntity;
+import org.jkiss.dbeaver.model.struct.DBSObject;
 import org.jkiss.dbeaver.model.websocket.event.WSTransactionalCountEvent;
 import org.jkiss.dbeaver.utils.GeneralUtils;
 import org.jkiss.utils.ArrayUtils;
@@ -122,7 +125,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         return DBUtils.getDefaultContext(connection.getDataSource(), false);
     }
 
-    private DBCExecutionContext getExecutionContext(@NotNull DBSDataContainer dataContainer) {
+    private DBCExecutionContext getExecutionContext(@NotNull DBDDataContainer dataContainer) {
         return DBUtils.getDefaultContext(dataContainer, false);
     }
 
@@ -291,7 +294,7 @@ public class WebSQLProcessor implements WebSessionProvider {
     public WebSQLExecuteInfo readDataFromContainer(
         @NotNull WebSQLContextInfo contextInfo,
         @NotNull DBRProgressMonitor monitor,
-        @NotNull DBSDataContainer dataContainer,
+        @NotNull DBDDataContainer dataContainer,
         @Nullable String resultId,
         @NotNull WebSQLDataFilter filter,
         @Nullable WebDataFormat dataFormat) throws DBException {
@@ -310,7 +313,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                         dataFilter,
                         filter.getOffset(),
                         filter.getLimit(),
-                        DBSDataContainer.FLAG_NONE,
+                        DBDDataContainer.FLAG_NONE,
                         filter.getLimit());
                     executeInfo.setDuration(statistics.getTotalTime());
 
@@ -364,8 +367,8 @@ public class WebSQLProcessor implements WebSessionProvider {
         boolean isAutoCommitEnabled = true;
 
         for (var rowIdentifier : rowIdentifierList) {
-            Map<DBSDataManipulator.ExecuteBatch, Object[]> resultBatches = new LinkedHashMap<>();
-            DBSDataManipulator dataManipulator = generateUpdateResultsDataBatch(
+            Map<DBDDataManipulator.ExecuteBatch, Object[]> resultBatches = new LinkedHashMap<>();
+            DBDDataManipulator dataManipulator = generateUpdateResultsDataBatch(
                 monitor, resultsInfo, rowIdentifier, updatedRows, deletedRows, addedRows, dataFormat, resultBatches, keyReceiver);
 
             DBCExecutionContext executionContext = getExecutionContext(dataManipulator);
@@ -390,8 +393,8 @@ public class WebSQLProcessor implements WebSessionProvider {
                 }
                 try {
                     Map<String, Object> options = Collections.emptyMap();
-                    for (Map.Entry<DBSDataManipulator.ExecuteBatch, Object[]> rb : resultBatches.entrySet()) {
-                        DBSDataManipulator.ExecuteBatch batch = rb.getKey();
+                    for (Map.Entry<DBDDataManipulator.ExecuteBatch, Object[]> rb : resultBatches.entrySet()) {
+                        DBDDataManipulator.ExecuteBatch batch = rb.getKey();
                         Object[] rowValues = rb.getValue();
                         keyReceiver.setRow(rowValues);
                         DBCStatistics statistics = batch.execute(session, options);
@@ -508,7 +511,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                     continue;
                 }
                 DBDDataFilter filter = new DBDDataFilter(constraints);
-                DBSDataContainer dataContainer = resultsInfo.getDataContainer();
+                DBDDataContainer dataContainer = resultsInfo.getDataContainer();
                 WebRowDataReceiver dataReceiver = new WebRowDataReceiver(resultsInfo.getAttributes(), row.getData(), dataFormat);
                 dataContainer.readData(
                     new AbstractExecutionSource(dataContainer, getExecutionContext(dataContainer), this),
@@ -517,7 +520,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                     filter,
                     0,
                     0,
-                    DBSDataContainer.FLAG_REFRESH,
+                    DBDDataContainer.FLAG_REFRESH,
                     0);
             }
         }
@@ -546,7 +549,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         @Nullable List<WebSQLResultsRow> addedRows,
         @Nullable WebDataFormat dataFormat) throws DBException
     {
-        Map<DBSDataManipulator.ExecuteBatch, Object[]> resultBatches = new LinkedHashMap<>();
+        Map<DBDDataManipulator.ExecuteBatch, Object[]> resultBatches = new LinkedHashMap<>();
 
 
         WebSQLResultsInfo resultsInfo = contextInfo.getResults(resultsId);
@@ -560,7 +563,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         }
         StringBuilder sqlBuilder = new StringBuilder();
         for (var rowIdentifier : rowIdentifierList) {
-            DBSDataManipulator dataManipulator = generateUpdateResultsDataBatch(
+            DBDDataManipulator dataManipulator = generateUpdateResultsDataBatch(
                 monitor, resultsInfo, rowIdentifier, updatedRows, deletedRows, addedRows, dataFormat, resultBatches, null);
 
             List<DBEPersistAction> actions = new ArrayList<>();
@@ -568,7 +571,7 @@ public class WebSQLProcessor implements WebSessionProvider {
             DBCExecutionContext executionContext = getExecutionContext(dataManipulator);
             try (DBCSession session = executionContext.openSession(monitor, DBCExecutionPurpose.USER, "Update data in container")) {
                 Map<String, Object> options = Collections.emptyMap();
-                for (DBSDataManipulator.ExecuteBatch batch : resultBatches.keySet()) {
+                for (DBDDataManipulator.ExecuteBatch batch : resultBatches.keySet()) {
                     batch.generatePersistActions(session, actions, options);
                 }
             }
@@ -580,7 +583,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         return sqlBuilder.toString();
     }
 
-    private DBSDataManipulator generateUpdateResultsDataBatch(
+    private DBDDataManipulator generateUpdateResultsDataBatch(
         @NotNull DBRProgressMonitor monitor,
         @NotNull WebSQLResultsInfo resultsInfo,
         @NotNull DBDRowIdentifier rowIdentifier,
@@ -588,14 +591,14 @@ public class WebSQLProcessor implements WebSessionProvider {
         @Nullable List<WebSQLResultsRow> deletedRows,
         @Nullable List<WebSQLResultsRow> addedRows,
         @Nullable WebDataFormat dataFormat,
-        @NotNull Map<DBSDataManipulator.ExecuteBatch, Object[]> resultBatches,
+        @NotNull Map<DBDDataManipulator.ExecuteBatch, Object[]> resultBatches,
         @Nullable DBDDataReceiver keyReceiver)
         throws DBException
     {
 
         DBSEntity dataContainer = rowIdentifier.getEntity();
         checkDataEditAllowed(dataContainer);
-        DBSDataManipulator dataManipulator = (DBSDataManipulator) dataContainer;
+        DBDDataManipulator dataManipulator = (DBDDataManipulator) dataContainer;
         //only script generation (without execution)
         boolean withoutExecution = keyReceiver == null;
 
@@ -678,7 +681,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                         finalRow[updateAttribute.getOrdinalPosition()] = realCellValue;
                     }
 
-                    DBSDataManipulator.ExecuteBatch updateBatch = dataManipulator.updateData(
+                    DBDDataManipulator.ExecuteBatch updateBatch = dataManipulator.updateData(
                         session, updateAttributes, keyAttributes, null, executionSource);
                     updateBatch.add(rowValues);
                     resultBatches.put(updateBatch, finalRow);
@@ -709,7 +712,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                         }
                     }
 
-                    DBSDataManipulator.ExecuteBatch insertBatch = dataManipulator.insertData(
+                    DBDDataManipulator.ExecuteBatch insertBatch = dataManipulator.insertData(
                         session,
                         insertAttributes.keySet().toArray(new DBDAttributeBinding[0]),
                         needKeys(keyAttributes, addedValues) ? keyReceiver : null,
@@ -741,7 +744,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                         }
                         DBDDocument document = dataLocator.findDocument(session, keyMap, keyMetaData);
 
-                        DBSDataManipulator.ExecuteBatch deleteBatch = dataManipulator.deleteData(
+                        DBDDataManipulator.ExecuteBatch deleteBatch = dataManipulator.deleteData(
                                 session,
                                 keyAttributes,
                                 executionSource);
@@ -755,7 +758,7 @@ public class WebSQLProcessor implements WebSessionProvider {
                                 delKeyAttributes.put(allAttributes[i], realCellValue);
                             }
                         }
-                        DBSDataManipulator.ExecuteBatch deleteBatch = dataManipulator.deleteData(
+                        DBDDataManipulator.ExecuteBatch deleteBatch = dataManipulator.deleteData(
                                 session,
                                 delKeyAttributes.keySet().toArray(new DBSAttributeBase[0]),
                                 executionSource);
@@ -916,7 +919,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         @Nullable WebSQLResultsRow row,
         @NotNull WebSQLCellValueReceiver dataReceiver
     ) throws DBException {
-        DBSDataContainer dataContainer = resultsInfo.getDataContainer();
+        DBDDataContainer dataContainer = resultsInfo.getDataContainer();
         DBCExecutionContext executionContext = getExecutionContext(dataContainer);
         try (DBCSession session = executionContext.openSession(monitor, DBCExecutionPurpose.USER, "Generate data update batches")) {
             DBDDataFilter dataFilter = new DBDDataFilter();
@@ -926,14 +929,14 @@ public class WebSQLProcessor implements WebSessionProvider {
             WebExecutionSource executionSource = new WebExecutionSource(dataContainer, executionContext, this);
             dataContainer.readData(
                 executionSource, session, dataReceiver, dataFilter,
-                0, 1, DBSDataContainer.FLAG_NONE, 1);
+                0, 1, DBDDataContainer.FLAG_NONE, 1);
         }
     }
 
     private void addKeyAttributes(
         @NotNull WebSQLResultsInfo resultsInfo,
         @Nullable WebSQLResultsRow row,
-        @NotNull DBSDataContainer dataContainer,
+        @NotNull DBDDataContainer dataContainer,
         @NotNull DBCSession session,
         @NotNull DBDDataFilter dataFilter
     ) throws DBException {
@@ -998,7 +1001,7 @@ public class WebSQLProcessor implements WebSessionProvider {
     }
 
     private void checkDataEditAllowed(DBSEntity dataContainer) throws DBWebException {
-        if (!(dataContainer instanceof DBSDataManipulator)) {
+        if (!(dataContainer instanceof DBDDataManipulator)) {
             throw new DBWebException("Data container '" + dataContainer.getName() + "' is not editable");
         }
     }
@@ -1022,7 +1025,7 @@ public class WebSQLProcessor implements WebSessionProvider {
 
     private void fillQueryResults(
         @NotNull WebSQLContextInfo contextInfo,
-        @NotNull DBSDataContainer dataContainer,
+        @NotNull DBDDataContainer dataContainer,
         @NotNull DBCStatement dbStat,
         boolean hasResultSet,
         @NotNull WebSQLExecuteInfo executeInfo,
@@ -1068,7 +1071,7 @@ public class WebSQLProcessor implements WebSessionProvider {
         executeInfo.setFullQuery(dbStat.getQueryString());
     }
 
-    private void setResultFilterText(@NotNull DBSDataContainer dataContainer, @NotNull DBPDataSource dataSource, @NotNull WebSQLExecuteInfo executeInfo, @NotNull DBDDataFilter filter) throws DBException {
+    private void setResultFilterText(@NotNull DBDDataContainer dataContainer, @NotNull DBPDataSource dataSource, @NotNull WebSQLExecuteInfo executeInfo, @NotNull DBDDataFilter filter) throws DBException {
         if (!filter.getConstraints().isEmpty() || !CommonUtils.isEmpty(filter.getWhere())) {
             StringBuilder where = new StringBuilder();
             SQLUtils.appendConditionString(

@@ -23,6 +23,7 @@ import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.DBPContextProvider;
 import org.jkiss.dbeaver.model.DBPDataSource;
 import org.jkiss.dbeaver.model.DBUtils;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
 import org.jkiss.dbeaver.model.data.DBDDataFilter;
 import org.jkiss.dbeaver.model.data.DBDDataReceiver;
 import org.jkiss.dbeaver.model.exec.*;
@@ -31,7 +32,6 @@ import org.jkiss.dbeaver.model.sql.SQLScriptContext;
 import org.jkiss.dbeaver.model.sql.SQLSyntaxManager;
 import org.jkiss.dbeaver.model.sql.data.SQLQueryDataContainer;
 import org.jkiss.dbeaver.model.sql.transformers.SQLQueryTransformerCount;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 import org.jkiss.dbeaver.model.struct.DBSObject;
 
 import java.io.PrintWriter;
@@ -39,7 +39,7 @@ import java.io.PrintWriter;
 /**
  * Web SQL query data container.
  */
-public class WebSQLQueryDataContainer implements DBSDataContainer, DBPContextProvider {
+public class WebSQLQueryDataContainer implements DBDDataContainer, DBPContextProvider {
 
     private static final Log log = Log.getLog(WebSQLQueryDataContainer.class);
 

@@ -23,7 +23,6 @@ import io.cloudbeaver.service.rm.nio.RMNIOFileSystem;
 import io.cloudbeaver.service.rm.nio.RMNIOFileSystemProvider;
 import io.cloudbeaver.service.rm.nio.RMPath;
 import io.cloudbeaver.test.WebGQLClient;
-import io.cloudbeaver.test.platform.CEServerTestSuite;
 import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.model.auth.SMAuthStatus;
 import org.jkiss.dbeaver.model.data.json.JSONUtils;

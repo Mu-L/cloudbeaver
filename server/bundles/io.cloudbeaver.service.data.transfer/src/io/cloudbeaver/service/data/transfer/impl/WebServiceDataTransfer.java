@@ -30,6 +30,8 @@ import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.Log;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
+import org.jkiss.dbeaver.model.data.DBDDataManipulator;
 import org.jkiss.dbeaver.model.exec.DBCException;
 import org.jkiss.dbeaver.model.exec.DBCResultSet;
 import org.jkiss.dbeaver.model.exec.DBCSession;
@@ -37,9 +39,6 @@ import org.jkiss.dbeaver.model.preferences.DBPPropertyDescriptor;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.runtime.VoidProgressMonitor;
 import org.jkiss.dbeaver.model.sql.DBQuotaException;
-import org.jkiss.dbeaver.model.sql.DBSQLException;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
-import org.jkiss.dbeaver.model.struct.DBSDataManipulator;
 import org.jkiss.dbeaver.model.struct.DBSEntity;
 import org.jkiss.dbeaver.model.struct.DBSObjectContainer;
 import org.jkiss.dbeaver.tools.transfer.IDataTransferConsumer;
@@ -51,13 +50,10 @@ import org.jkiss.dbeaver.tools.transfer.stream.*;
 import org.jkiss.dbeaver.utils.ContentUtils;
 import org.jkiss.utils.CommonUtils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.BatchUpdateException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -111,9 +107,9 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
         String containerNodePath,
         WebDataTransferParameters parameters) throws DBWebException {
 
-        DBSDataContainer dataContainer;
+        DBDDataContainer dataContainer;
         try {
-            dataContainer = sqlProcessor.getDataContainerByNodePath(sqlProcessor.getWebSession().getProgressMonitor(), containerNodePath, DBSDataContainer.class);
+            dataContainer = sqlProcessor.getDataContainerByNodePath(sqlProcessor.getWebSession().getProgressMonitor(), containerNodePath, DBDDataContainer.class);
         } catch (DBException e) {
             throw new DBWebException("Invalid node path: " + containerNodePath, e);
         }
@@ -170,7 +166,7 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
         return new WebDataTransferDefaultExportSettings();
     }
 
-    private WebAsyncTaskInfo asyncExportFromDataContainer(WebSQLProcessor sqlProcessor, WebDataTransferParameters parameters, DBSDataContainer dataContainer,
+    private WebAsyncTaskInfo asyncExportFromDataContainer(WebSQLProcessor sqlProcessor, WebDataTransferParameters parameters, DBDDataContainer dataContainer,
                                                           @Nullable WebSQLResultsInfo resultsInfo) {
         sqlProcessor.getWebSession().addInfoMessage("Export data");
         DataTransferProcessorDescriptor processor = DataTransferRegistry.getInstance().getProcessor(parameters.getProcessorId());
@@ -227,7 +223,7 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
         webSession.addInfoMessage("Import data");
         DataTransferProcessorDescriptor processor = DataTransferRegistry.getInstance().getProcessor(processorId);
 
-        DBSDataContainer dataContainer = sqlContext.getDataContainer();
+        DBDDataContainer dataContainer = sqlContext.getDataContainer();
         WebAsyncTaskProcessor<String> runnable = new WebAsyncTaskProcessor<>() {
             @Override
             public void run(DBRProgressMonitor monitor) throws InvocationTargetException {
@@ -235,7 +231,7 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
                 try {
                     monitor.subTask("Import data using " + processor.getName());
                     try {
-                        importData(monitor, processor, (DBSDataManipulator) dataContainer, path);
+                        importData(monitor, processor, (DBDDataManipulator) dataContainer, path);
                     } catch (Exception e) {
                         if (e instanceof DBException) {
                             throw e;
@@ -260,7 +256,7 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
     private void exportData(
         DBRProgressMonitor monitor,
         DataTransferProcessorDescriptor processor,
-        DBSDataContainer dataContainer,
+        DBDDataContainer dataContainer,
         WebDataTransferParameters parameters,
         WebSQLResultsInfo resultsInfo,
         Path exportFile) throws DBException, IOException
@@ -337,7 +333,7 @@ public class WebServiceDataTransfer implements DBWServiceDataTransfer {
     private void importData(
             DBRProgressMonitor monitor,
             DataTransferProcessorDescriptor processor,
-            @NotNull DBSDataManipulator dataContainer,
+            @NotNull DBDDataManipulator dataContainer,
             Path path) throws DBException {
         IDataTransferProcessor processorInstance = processor.getInstance();
 

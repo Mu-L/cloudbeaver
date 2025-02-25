@@ -20,11 +20,11 @@ import io.cloudbeaver.server.CBConstants;
 import io.cloudbeaver.server.WebAppUtils;
 import io.cloudbeaver.utils.ServletAppUtils;
 import org.jkiss.dbeaver.Log;
+import org.jkiss.dbeaver.model.data.DBDDataContainer;
 import org.jkiss.dbeaver.model.exec.DBCException;
 import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.runtime.VoidProgressMonitor;
 import org.jkiss.dbeaver.model.sql.DBQuotaException;
-import org.jkiss.dbeaver.model.struct.DBSDataContainer;
 import org.jkiss.utils.CommonUtils;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class WebSQLDataLOBReceiver extends WebSQLCellValueReceiver {
         "-files");
     private final String tableName;
 
-    WebSQLDataLOBReceiver(String tableName, DBSDataContainer dataContainer, int rowIndex) {
+    WebSQLDataLOBReceiver(String tableName, DBDDataContainer dataContainer, int rowIndex) {
         super(dataContainer, rowIndex);
         this.tableName = tableName;
         if (!Files.exists(DATA_EXPORT_FOLDER)) {
