@@ -19,8 +19,8 @@ package io.cloudbeaver.service.sql;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.DBPDataKind;
 import org.jkiss.dbeaver.model.DBPEvaluationContext;
-import org.jkiss.dbeaver.model.DBValueFormatting;
 import org.jkiss.dbeaver.model.data.DBDAttributeBinding;
+import org.jkiss.dbeaver.model.data.DBDValueFormatting;
 import org.jkiss.dbeaver.model.exec.DBCLogicalOperator;
 import org.jkiss.dbeaver.model.exec.DBExecUtils;
 import org.jkiss.dbeaver.model.meta.Property;
@@ -62,7 +62,7 @@ public class WebSQLQueryResultColumn {
 
     @Property
     public String getIcon() {
-        return DBValueFormatting.getObjectImage(attrMeta).getLocation();
+        return DBDValueFormatting.getObjectImage(attrMeta).getLocation();
     }
 
     @Property
