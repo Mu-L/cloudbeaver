@@ -19,8 +19,7 @@ echo "Pull cloudbeaver platform"
 cd ../..
 
 echo "Pull dbeaver platform"
-[ ! -d "$repositories_root_dir/dbeaver-common" ] && git clone --depth 1 https://github.com/dbeaver/dbeaver-common.git "$repositories_root_dir/dbeaver-common"
-source "$repositories_root_dir/dbeaver-common/scripts/clone.sh"
+source "$repositories_root_dir/dbeaver-common/scripts/git_utils.sh"
 prepare_repo_and_dependencies "$repositories_root_dir" cloudbeaver
 
 cd cloudbeaver/deploy
