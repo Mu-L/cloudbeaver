@@ -16,7 +16,6 @@
     </extension>
     <extension point="io.cloudbeaver.handler">
         <servletHandler id="LocalServletHandler" class="io.cloudbeaver.service.auth.local.LocalServletHandler"/>
-        <servletHandler id="ComplexAuthServletHandler" class="io.cloudbeaver.service.auth.impl.ComplexAuthServletHandler"/>
         <sessionHandler id="LocalSessionHandler" class="io.cloudbeaver.service.auth.local.LocalSessionHandler"/>
     </extension>
 
