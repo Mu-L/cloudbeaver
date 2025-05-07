@@ -1,6 +1,6 @@
 /*
  * CloudBeaver - Cloud Database Manager
- * Copyright (C) 2020-2024 DBeaver Corp and others
+ * Copyright (C) 2020-2025 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0.
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,11 @@ export function baseConfigurationPlugin(mode: string, packageJson: any): PluginO
             origin: 'http://localhost:8080',
             proxy: {
               '/api': {
+                target: envServer,
+                changeOrigin: true,
+                secure: false,
+              },
+              '/auth-complex': {
                 target: envServer,
                 changeOrigin: true,
                 secure: false,
