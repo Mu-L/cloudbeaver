@@ -19,6 +19,7 @@ import { useUsersTableFilters } from './Filters/useUsersTableFilters.js';
 import { UsersAdministrationToolsPanel } from './UsersAdministrationToolsPanel.js';
 import { UsersTable } from './UsersTable.js';
 import { useUsersTable } from './useUsersTable.js';
+import { CachedMapAllKey } from '@cloudbeaver/core-resource';
 
 interface Props {
   param?: string | null;
@@ -26,7 +27,7 @@ interface Props {
 
 export const UsersPage = observer<Props>(function UsersPage({ param }) {
   const createUserService = useService(CreateUserService);
-  const authRolesResource = useResource(UsersPage, AuthRolesResource, undefined);
+  const authRolesResource = useResource(UsersPage, AuthRolesResource, CachedMapAllKey);
   const administrationUsersManagementService = useService(AdministrationUsersManagementService);
 
   useAutoLoad(UsersPage, administrationUsersManagementService.loaders);

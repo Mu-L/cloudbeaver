@@ -4,6 +4,7 @@ mutation updateUserPreferences($preferences: Object!) {
     displayName
     authRole
     linkedAuthProviders
+    authRoleConfigurationParameters
     configurationParameters
     teams {
       teamId

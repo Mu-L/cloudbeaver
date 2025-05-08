@@ -5,6 +5,7 @@ query getActiveUser {
     displayName
     authRole
     linkedAuthProviders
+    authRoleConfigurationParameters
     configurationParameters
     teams {
       teamId
