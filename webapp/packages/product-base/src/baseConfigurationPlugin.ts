@@ -54,6 +54,9 @@ export function baseConfigurationPlugin(mode: string, packageJson: any): PluginO
             host: 'localhost',
             port: 8080,
             origin: 'http://localhost:8080',
+            cors: {
+              origin: /(^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$|^vscode-webview:\/\/|^vscode-file:\/\/vscode-app)/,
+            },
             proxy: {
               '/api': {
                 target: envServer,
