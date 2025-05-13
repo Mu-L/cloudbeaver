@@ -18,6 +18,7 @@ package io.cloudbeaver.server.websockets;
 
 import io.cloudbeaver.model.session.WebHeadlessSession;
 import io.cloudbeaver.model.session.WebHttpRequestInfo;
+import io.cloudbeaver.server.HttpConstants;
 import io.cloudbeaver.server.WebAppSessionManager;
 import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.HandshakeResponse;
@@ -94,7 +95,7 @@ public class CBWebSocketServerConfigurator extends ServerEndpointConfig.Configur
     @Nullable
     private String getSessionId(@NotNull HandshakeRequest request) {
         // complex auth uses bearer authentication
-        List<String> authHeaders = WSClientUtils.getHeaders(request.getHeaders(), "Authorization");
+        List<String> authHeaders = WSClientUtils.getHeaders(request.getHeaders(), HttpConstants.HEADER_AUTHORIZATION);
         if (!CommonUtils.isEmpty(authHeaders) && authHeaders.get(0).startsWith("Bearer ")) {
             return authHeaders.get(0).substring(7);
         }
