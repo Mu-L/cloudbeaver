@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 /*
  * CloudBeaver - Cloud Database Manager
  * Copyright (C) 2020-2025 DBeaver Corp and others
