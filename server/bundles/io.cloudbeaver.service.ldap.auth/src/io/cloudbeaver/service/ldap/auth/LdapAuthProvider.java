@@ -78,7 +78,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         }
 
         LdapSettings ldapSettings = new LdapSettings(providerConfig);
-        Hashtable<String, String> environment = creteAuthEnvironment(ldapSettings);
+        Map<String, String> environment = creteAuthEnvironment(ldapSettings);
 
         Map<String, Object> userData = new HashMap<>();
         if (!isFullDN(userName) && CommonUtils.isNotEmpty(ldapSettings.getLoginAttribute())) {
@@ -127,13 +127,13 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         ) {
             return null;
         }
-        Hashtable<String, String> serviceUserContext = creteAuthEnvironment(ldapSettings);
+        Map<String, String> serviceUserContext = creteAuthEnvironment(ldapSettings);
         serviceUserContext.put(Context.SECURITY_PRINCIPAL, ldapSettings.getBindUserDN());
         serviceUserContext.put(Context.SECURITY_CREDENTIALS, ldapSettings.getBindUserPassword());
         DirContext serviceContext;
 
         try {
-            serviceContext = new InitialDirContext(serviceUserContext);
+            serviceContext = new InitialDirContext(new Hashtable<>(serviceUserContext));
             String userDN = findUserDN(serviceContext, ldapSettings, login);
             if (userDN == null) {
                 return null;
@@ -164,7 +164,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         environment.put(Context.SECURITY_CREDENTIALS, ldapSettings.getBindUserPassword());
         DirContext bindUserContext;
         try {
-            bindUserContext = new InitialDirContext(environment);
+            bindUserContext = new InitialDirContext(new Hashtable<>(environment));
             SearchControls searchControls = createSearchControls();
             var searchResult = bindUserContext.search(fullUserDN, ldapSettings.getFilter(), searchControls);
             if (!searchResult.hasMore()) {
@@ -194,8 +194,8 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
     }
 
     @NotNull
-    public Hashtable<String, String> creteAuthEnvironment(LdapSettings ldapSettings) throws DBException {
-        Hashtable<String, String> environment = new Hashtable<>();
+    public Map<String, String> creteAuthEnvironment(LdapSettings ldapSettings) throws DBException {
+        Map<String, String> environment = new HashMap<>();
         environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 
         environment.put(Context.PROVIDER_URL, ldapSettings.getLdapProviderUrl());
@@ -211,7 +211,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         return environment;
     }
 
-    private void configureSsl(LdapSettings ldapSettings, Hashtable<String, String> environment) throws Exception {
+    private void configureSsl(LdapSettings ldapSettings, Map<String, String> environment) throws Exception {
         LdapSslSetting ldapSslSetting = ldapSettings.getLdapSslSetting();
 
         if (!ldapSslSetting.isEnable() || CommonUtils.isEmpty(ldapSslSetting.getSslCert())) {
@@ -430,14 +430,14 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         @NotNull String password,
         @NotNull LdapSettings ldapSettings,
         @Nullable String login,
-        @NotNull Hashtable<String, String> environment
+        @NotNull Map<String, String> environment
     ) throws DBException {
         Map<String, Object> userData = new HashMap<>();
         environment.put(Context.SECURITY_PRINCIPAL, userDN);
         environment.put(Context.SECURITY_CREDENTIALS, password);
         DirContext userContext = null;
         try {
-            userContext = new InitialDirContext(environment);
+            userContext = new InitialDirContext(new Hashtable<>(environment));
             SearchControls searchControls = createSearchControls();
             String userId = "";
             var searchResult = userContext.search(userDN, "objectClass=*", searchControls);
@@ -511,7 +511,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
     private String getUserDN(LdapSettings ldapSettings, String displayName) {
         DirContext context;
         try {
-            context = new InitialDirContext(creteAuthEnvironment(ldapSettings));
+            context = new InitialDirContext(new Hashtable<>(creteAuthEnvironment(ldapSettings)));
             return findUserDN(context, ldapSettings, displayName);
         } catch (Exception e) {
             log.error("User not found", e);
@@ -525,7 +525,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         NamingEnumeration<SearchResult> searchResults = null;
         List<String> result = new ArrayList<>();
         try {
-            Hashtable<String, String> environment = creteAuthEnvironment(ldapSettings);
+            Map<String, String> environment = creteAuthEnvironment(ldapSettings);
             if (CommonUtils.isEmpty(ldapSettings.getBindUserDN())) {
                 environment.put(Context.SECURITY_PRINCIPAL, String.valueOf(authParameters.get(LdapConstants.CRED_USER_DN)));
                 environment.put(Context.SECURITY_CREDENTIALS, String.valueOf(authParameters.get(LdapConstants.CRED_PASSWORD)));
@@ -536,7 +536,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
             //it's a hack. Otherwise password will be written to database
             authParameters.remove(LdapConstants.CRED_PASSWORD);
 
-            context = new InitialDirContext(environment);
+            context = new InitialDirContext(new Hashtable<>(environment));
 
             String searchFilter = "(member=" + fullDN + ")";
             SearchControls searchControls = new SearchControls();
