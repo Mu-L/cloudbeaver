@@ -24,8 +24,8 @@ import io.cloudbeaver.auth.SMBruteForceProtected;
 import io.cloudbeaver.auth.provider.local.LocalAuthProviderConstants;
 import io.cloudbeaver.model.session.WebSession;
 import io.cloudbeaver.model.user.WebUser;
-import io.cloudbeaver.service.ldap.auth.ssl.LdapSSLSocketFactory;
 import io.cloudbeaver.service.ldap.auth.ssl.LdapSslSetting;
+import io.cloudbeaver.service.ldap.auth.ssl.LdapSslSocketFactory;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.DBException;
@@ -232,8 +232,8 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, tmf.getTrustManagers(), new SecureRandom());
 
-        LdapSSLSocketFactory.setContextFactory(sslContext);
-        environment.put("java.naming.ldap.factory.socket", LdapSSLSocketFactory.class.getName());
+        LdapSslSocketFactory.setContextFactory(sslContext);
+        environment.put("java.naming.ldap.factory.socket", LdapSslSocketFactory.class.getName());
     }
 
     protected String findUserDN(DirContext serviceContext, LdapSettings ldapSettings, String userIdentifier) throws DBException {
