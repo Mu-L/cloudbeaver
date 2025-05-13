@@ -24,6 +24,8 @@ import io.cloudbeaver.auth.SMBruteForceProtected;
 import io.cloudbeaver.auth.provider.local.LocalAuthProviderConstants;
 import io.cloudbeaver.model.session.WebSession;
 import io.cloudbeaver.model.user.WebUser;
+import io.cloudbeaver.service.ldap.auth.ssl.LdapSSLSocketFactory;
+import io.cloudbeaver.service.ldap.auth.ssl.LdapSslSetting;
 import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.DBException;
@@ -36,11 +38,18 @@ import org.jkiss.dbeaver.model.security.SMAuthProviderCustomConfiguration;
 import org.jkiss.dbeaver.model.security.SMController;
 import org.jkiss.utils.CommonUtils;
 
+import java.io.ByteArrayInputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.util.*;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
-import java.util.*;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBruteForceProtected, SMAuthProviderAssigner {
     private static final Log log = Log.getLog(LdapAuthProvider.class);
@@ -185,13 +194,46 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
     }
 
     @NotNull
-    public Hashtable<String, String> creteAuthEnvironment(LdapSettings ldapSettings) {
+    public Hashtable<String, String> creteAuthEnvironment(LdapSettings ldapSettings) throws DBException {
         Hashtable<String, String> environment = new Hashtable<>();
         environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 
         environment.put(Context.PROVIDER_URL, ldapSettings.getLdapProviderUrl());
         environment.put(Context.SECURITY_AUTHENTICATION, "simple");
+
+        try {
+            configureSsl(ldapSettings, environment);
+        } catch (Exception e) {
+            log.error("Can't establish ssl connection", e);
+            throw new DBException("Can't establish ssl connection", e);
+        }
+
         return environment;
+    }
+
+    private void configureSsl(LdapSettings ldapSettings, Hashtable<String, String> environment) throws Exception {
+        LdapSslSetting ldapSslSetting = ldapSettings.getLdapSslSetting();
+
+        if (!ldapSslSetting.isEnable() || CommonUtils.isEmpty(ldapSslSetting.getSslCert())) {
+            return;
+        }
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        byte[] decoded = Base64.getDecoder().decode(ldapSslSetting.getSslCert());
+        ByteArrayInputStream certStream = new ByteArrayInputStream(decoded);
+        Certificate cert = cf.generateCertificate(certStream);
+
+        KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
+        ts.load(null, null);
+        ts.setCertificateEntry("trusted-root", cert);
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ts);
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, tmf.getTrustManagers(), new SecureRandom());
+
+        LdapSSLSocketFactory.setContextFactory(sslContext);
+        environment.put("java.naming.ldap.factory.socket", LdapSSLSocketFactory.class.getName());
     }
 
     protected String findUserDN(DirContext serviceContext, LdapSettings ldapSettings, String userIdentifier) throws DBException {
