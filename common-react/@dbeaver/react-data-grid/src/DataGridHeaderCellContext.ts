@@ -10,7 +10,7 @@ export interface IDataGridHeaderCellContext {
   getHeaderPinned?: (colIdx: number) => boolean;
   getColumnSortingState?: (colIdx: number) => 'asc' | 'desc' | null;
   getColumnSortable?: (colIdx: number) => boolean;
-  onColumnSort?: (colIdx: number) => void;
+  onColumnSort?: (colIdx: number, multiple?: boolean) => void;
 }
 
 export const DataGridCellHeaderContext = createContext<IDataGridHeaderCellContext | null>(null);
