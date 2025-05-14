@@ -133,7 +133,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         DirContext serviceContext;
 
         try {
-            serviceContext = new InitialDirContext(new Hashtable<>(serviceUserContext));
+            serviceContext = initConnection(serviceUserContext);
             String userDN = findUserDN(serviceContext, ldapSettings, login);
             if (userDN == null) {
                 return null;
@@ -164,7 +164,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         environment.put(Context.SECURITY_CREDENTIALS, ldapSettings.getBindUserPassword());
         DirContext bindUserContext;
         try {
-            bindUserContext = new InitialDirContext(new Hashtable<>(environment));
+            bindUserContext = initConnection(environment);
             SearchControls searchControls = createSearchControls();
             var searchResult = bindUserContext.search(fullUserDN, ldapSettings.getFilter(), searchControls);
             if (!searchResult.hasMore()) {
@@ -437,7 +437,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         environment.put(Context.SECURITY_CREDENTIALS, password);
         DirContext userContext = null;
         try {
-            userContext = new InitialDirContext(new Hashtable<>(environment));
+            userContext = initConnection(environment);
             SearchControls searchControls = createSearchControls();
             String userId = "";
             var searchResult = userContext.search(userDN, "objectClass=*", searchControls);
@@ -511,7 +511,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
     private String getUserDN(LdapSettings ldapSettings, String displayName) {
         DirContext context;
         try {
-            context = new InitialDirContext(new Hashtable<>(creteAuthEnvironment(ldapSettings)));
+            context = initConnection(creteAuthEnvironment(ldapSettings));
             return findUserDN(context, ldapSettings, displayName);
         } catch (Exception e) {
             log.error("User not found", e);
@@ -536,7 +536,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
             //it's a hack. Otherwise password will be written to database
             authParameters.remove(LdapConstants.CRED_PASSWORD);
 
-            context = new InitialDirContext(new Hashtable<>(environment));
+            context = initConnection(environment);
 
             String searchFilter = "(member=" + fullDN + ")";
             SearchControls searchControls = new SearchControls();
@@ -561,5 +561,18 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
             }
         }
         return result;
+    }
+
+    public DirContext initConnection(Map<String, String> environment) throws DBException {
+        //this hack is needed for correct LDAPS working. JNDI uses ContextClassLoader instead of OSGI loader
+        ClassLoader previous = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+        try {
+            return new InitialDirContext(new Hashtable<>(environment));
+        } catch (Exception e) {
+            throw new DBException("Can't establish LDAP connection", e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(previous);
+        }
     }
 }
