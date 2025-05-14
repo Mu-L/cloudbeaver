@@ -40,6 +40,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jkiss.code.NotNull;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.data.json.JSONUtils;
 import org.jkiss.utils.CommonUtils;
@@ -50,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,12 +70,11 @@ public class GraphQLEndpoint extends HttpServlet {
     private static final String HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 
     private static final String CORE_SCHEMA_FILE_NAME = "schema/schema.graphqls";
-    private final GraphQL graphQL;
-
     private static final Gson gson = new GsonBuilder()
         .serializeNulls()
         .setPrettyPrinting()
         .create();
+    private final GraphQL graphQL;
     private GraphQLBindingContext bindingContext;
 
     public GraphQLEndpoint(Instrumentation instrumentation) {
@@ -88,71 +89,50 @@ public class GraphQLEndpoint extends HttpServlet {
             .build();
     }
 
-    private GraphQLSchema buildSchema() {
-        SchemaParser schemaParser = new SchemaParser();
-        TypeDefinitionRegistry parsedSchema = new TypeDefinitionRegistry();
+    @NotNull
+    private static String getOriginFromReferrer(@NotNull String referrer) throws MalformedURLException {
+        URL url = new URL(referrer);
+        String protocol = url.getProtocol();
+        String host = url.getHost();
+        int port = url.getPort();
 
-        try (InputStream schemaStream = WebServiceUtils.openStaticResource(CORE_SCHEMA_FILE_NAME)) {
-            try (Reader schemaReader = new InputStreamReader(schemaStream)) {
-                parsedSchema.merge(schemaParser.parse(schemaReader));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading core schema", e);
+        String origin;
+
+        // if the port is not explicitly specified in the input, it will be -1.
+        if (port == -1) {
+            origin = String.format("%s://%s", protocol, host);
+        } else {
+            origin = String.format("%s://%s:%d", protocol, host, port);
         }
+        return origin;
+    }
 
-        List<String> addedBindings = new ArrayList<>();
-        for (DBWServiceBindingGraphQL wsd : WebServiceRegistry.getInstance().getWebServices(DBWServiceBindingGraphQL.class)) {
-            try {
-                TypeDefinitionRegistry typeDefinition = wsd.getTypeDefinition();
-                if (typeDefinition != null) {
-                    addedBindings.add(wsd.getClass().getSimpleName());
-                    parsedSchema.merge(typeDefinition);
-                }
-            } catch (DBWebException e) {
-                log.warn("Error obtaining web service type definitions", e);
-            }
+    public static HttpServletRequest getServletRequest(DataFetchingEnvironment env) {
+        GraphQLContext context = env.getGraphQlContext();
+        HttpServletRequest request = context.get("request");
+        if (request == null) {
+            throw new IllegalStateException("Null request");
         }
-        log.debug("Schema extensions loaded: " + String.join(",", addedBindings));
+        return request;
+    }
 
-        SchemaGenerator schemaGenerator = new SchemaGenerator();
-        bindingContext = new GraphQLBindingContext();
-        return schemaGenerator.makeExecutableSchema(parsedSchema, bindingContext.buildRuntimeWiring());
+    public static HttpServletResponse getServletResponse(DataFetchingEnvironment env) {
+        GraphQLContext context = env.getGraphQlContext();
+        HttpServletResponse response = context.get("response");
+        if (response == null) {
+            throw new IllegalStateException("Null response");
+        }
+        return response;
+    }
+
+    public static DBWBindingContext getBindingContext(DataFetchingEnvironment env) {
+        GraphQLContext context = env.getGraphQlContext();
+        return context.get("bindingContext");
     }
 
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response) {
         setDevelHeaders(request, response);
-    }
-
-    private void setDevelHeaders(HttpServletRequest request, HttpServletResponse response) {
-        if (ServletAppUtils.getServletApplication().getServerConfiguration().isDevelMode()) {
-            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "*");
-            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, "*");
-
-            String referrer = request.getHeader("referer");
-
-            try {
-                URL url = new URL(referrer);
-                String protocol = url.getProtocol();
-                String host = url.getHost();
-                int port = url.getPort();
-
-                String origin;
-
-                // if the port is not explicitly specified in the input, it will be -1.
-                if (port == -1) {
-                    origin = String.format("%s://%s", protocol, host);
-                } else {
-                    origin = String.format("%s://%s:%d", protocol, host, port);
-                }
-
-                // for local machine must be defined explicitly:
-                response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "Set-Cookie, Content-Type");
-                response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-            } catch (Throwable t) {}
-        }
     }
 
     @Override
@@ -192,20 +172,6 @@ public class GraphQLEndpoint extends HttpServlet {
         }
     }
 
-    private void executeSingleQuery(HttpServletRequest request, HttpServletResponse response, JsonObject reqObject) throws IOException {
-        JsonElement query = reqObject.get("query");
-        if (query == null) {
-            response.sendError(400, "Query not specified");
-            return;
-        }
-        JsonElement varJSON = reqObject.get("variables");
-        Map<String, Object> variables = varJSON == null ? null : gson.fromJson(varJSON, JSONUtils.MAP_TYPE_TOKEN);
-
-        JsonElement operNameJSON = reqObject.get("operationName");
-
-        executeQuery(request, response, query.getAsString(), variables, operNameJSON == null || operNameJSON instanceof JsonNull ? null : operNameJSON.getAsString());
-    }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String path = request.getPathInfo();
@@ -230,12 +196,97 @@ public class GraphQLEndpoint extends HttpServlet {
         }
     }
 
-    private void executeQuery(HttpServletRequest request, HttpServletResponse response, String query, Map<String, Object> variables, String operationName) throws IOException {
+    private GraphQLSchema buildSchema() {
+        SchemaParser schemaParser = new SchemaParser();
+        TypeDefinitionRegistry parsedSchema = new TypeDefinitionRegistry();
+
+        try (InputStream schemaStream = WebServiceUtils.openStaticResource(CORE_SCHEMA_FILE_NAME)) {
+            try (Reader schemaReader = new InputStreamReader(schemaStream)) {
+                parsedSchema.merge(schemaParser.parse(schemaReader));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading core schema", e);
+        }
+
+        List<String> addedBindings = new ArrayList<>();
+        for (DBWServiceBindingGraphQL wsd : WebServiceRegistry.getInstance().getWebServices(DBWServiceBindingGraphQL.class)) {
+            try {
+                TypeDefinitionRegistry typeDefinition = wsd.getTypeDefinition();
+                if (typeDefinition != null) {
+                    addedBindings.add(wsd.getClass().getSimpleName());
+                    parsedSchema.merge(typeDefinition);
+                }
+            } catch (DBWebException e) {
+                log.warn("Error obtaining web service type definitions", e);
+            }
+        }
+        log.debug("Schema extensions loaded: " + String.join(",", addedBindings));
+
+        SchemaGenerator schemaGenerator = new SchemaGenerator();
+        bindingContext = new GraphQLBindingContext();
+        return schemaGenerator.makeExecutableSchema(parsedSchema, bindingContext.buildRuntimeWiring());
+    }
+
+    private void setDevelHeaders(HttpServletRequest request, HttpServletResponse response) {
+        if (ServletAppUtils.getServletApplication().getServerConfiguration().isDevelMode()) {
+            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "*");
+            // response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, "*");
+
+
+            String origin = request.getHeader("origin");
+            if (origin == null) {
+                String referrer = request.getHeader("referer");
+                if (referrer == null) {
+                    return;
+                }
+                try {
+                    origin = getOriginFromReferrer(referrer);
+                } catch (Throwable ignored) {
+                    return;
+                }
+            }
+
+            // for local machine must be defined explicitly:
+            response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "Set-Cookie, Content-Type");
+            response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+        }
+    }
+
+    private void executeSingleQuery(HttpServletRequest request, HttpServletResponse response, JsonObject reqObject) throws IOException {
+        JsonElement query = reqObject.get("query");
+        if (query == null) {
+            response.sendError(400, "Query not specified");
+            return;
+        }
+        JsonElement varJSON = reqObject.get("variables");
+        Map<String, Object> variables = varJSON == null ? null : gson.fromJson(varJSON, JSONUtils.MAP_TYPE_TOKEN);
+
+        JsonElement operNameJSON = reqObject.get("operationName");
+
+        executeQuery(
+            request,
+            response,
+            query.getAsString(),
+            variables,
+            operNameJSON == null || operNameJSON instanceof JsonNull ? null : operNameJSON.getAsString()
+        );
+    }
+
+    private void executeQuery(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        String query,
+        Map<String, Object> variables,
+        String operationName
+    ) throws IOException {
         Map<String, Object> mapOfContext =
             Map.of(
                 "request", request,
                 "response", response,
-                "bindingContext", bindingContext);
+                "bindingContext", bindingContext
+            );
         ExecutionInput.Builder contextBuilder = ExecutionInput.newExecutionInput()
             .graphQLContext(mapOfContext)
             .query(query);
@@ -247,11 +298,11 @@ public class GraphQLEndpoint extends HttpServlet {
         }
         {
             String apiCall = operationName;
-//            if (!CommonUtils.isEmpty(apiCall)) {
-//                if (variables != null) {
-//                    apiCall += " (" + variables + ")";
-//                }
-//            }
+            //            if (!CommonUtils.isEmpty(apiCall)) {
+            //                if (variables != null) {
+            //                    apiCall += " (" + variables + ")";
+            //                }
+            //            }
             String sessionId = GraphQLLoggerUtil.getSessionId(request);
             String userId = GraphQLLoggerUtil.getUserId(request);
             String loggerMessage = GraphQLLoggerUtil.buildLoggerMessage(sessionId, userId, variables);
@@ -288,7 +339,10 @@ public class GraphQLEndpoint extends HttpServlet {
             if (exception instanceof InvocationTargetException) {
                 exception = ((InvocationTargetException) exception).getTargetException();
             }
-            log.debug("GraphQL call failed at '" + handlerParameters.getPath() + "'" /*+ ", " + handlerParameters.getArgumentValues()*/, exception);
+            log.debug(
+                "GraphQL call failed at '" + handlerParameters.getPath() + "'" /*+ ", " + handlerParameters.getArgumentValues()*/,
+                exception
+            );
 
             // Log in session
             WebSession webSession = WebServiceBindingBase.findWebSession(handlerParameters.getDataFetchingEnvironment());
@@ -310,30 +364,6 @@ public class GraphQLEndpoint extends HttpServlet {
             var result = handlerResult.error((GraphQLError) exception).build();
             return CompletableFuture.completedFuture(result);
         }
-    }
-
-
-    public static HttpServletRequest getServletRequest(DataFetchingEnvironment env) {
-        GraphQLContext context = env.getGraphQlContext();
-        HttpServletRequest request = context.get("request");
-        if (request == null) {
-            throw new IllegalStateException("Null request");
-        }
-        return request;
-    }
-
-    public static HttpServletResponse getServletResponse(DataFetchingEnvironment env) {
-        GraphQLContext context = env.getGraphQlContext();
-        HttpServletResponse response = context.get("response");
-        if (response == null) {
-            throw new IllegalStateException("Null response");
-        }
-        return response;
-    }
-
-    public static DBWBindingContext getBindingContext(DataFetchingEnvironment env) {
-        GraphQLContext context = env.getGraphQlContext();
-        return context.get("bindingContext");
     }
 
 }
