@@ -8,6 +8,9 @@ export interface IDataGridHeaderCellContext {
   getHeaderResizable?: (colIdx: number) => boolean;
   getHeaderHeight?: () => number;
   getHeaderPinned?: (colIdx: number) => boolean;
+  getColumnSortingState?: (colIdx: number) => 'asc' | 'desc' | null;
+  getColumnSortable?: (colIdx: number) => boolean;
+  onColumnSort?: (colIdx: number) => void;
 }
 
 export const DataGridCellHeaderContext = createContext<IDataGridHeaderCellContext | null>(null);
