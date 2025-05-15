@@ -288,8 +288,7 @@ public class CBSessionManager implements WebAppSessionManager {
         }
 
         for (var session : expiredList) {
-            log.debug("> Expire session '" + session.getSessionId() + "'");
-            session.close();
+            closeExpiredSession(session);
         }
     }
 
@@ -434,5 +433,10 @@ public class CBSessionManager implements WebAppSessionManager {
                 return webSessionImpl;
             }
         }
+    }
+
+    protected void closeExpiredSession(@NotNull BaseWebSession session) {
+        log.debug("> Expire session '" + session.getSessionId() + "'");
+        session.close();
     }
 }
