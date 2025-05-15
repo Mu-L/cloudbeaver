@@ -249,7 +249,7 @@ public class GraphQLEndpoint extends HttpServlet {
 
             // for local machine must be defined explicitly:
             response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-            response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "Set-Cookie, Content-Type");
+            response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_HEADERS, "Set-Cookie, Content-Type, Authorization");
             response.setHeader(HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         }
     }
