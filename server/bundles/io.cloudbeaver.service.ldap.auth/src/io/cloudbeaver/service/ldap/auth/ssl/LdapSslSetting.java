@@ -16,12 +16,15 @@
  */
 package io.cloudbeaver.service.ldap.auth.ssl;
 
+import org.jkiss.code.Nullable;
+
 public class LdapSslSetting {
     private final boolean isEnable;
+    @Nullable
     private final String sslCert;
 
-    public LdapSslSetting(boolean isEnable, String sslCert) {
-        this.isEnable = isEnable;
+    public LdapSslSetting(Boolean isEnable, @Nullable String sslCert) {
+        this.isEnable = Boolean.TRUE.equals(isEnable);
         this.sslCert = sslCert;
     }
 
@@ -29,6 +32,7 @@ public class LdapSslSetting {
         return isEnable;
     }
 
+    @Nullable
     public String getSslCert() {
         return sslCert;
     }
