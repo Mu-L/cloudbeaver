@@ -69,6 +69,7 @@ export const DataGrid = forwardRef<DataGridRef, DataGridProps>(function DataGrid
     children,
     className,
     onCellKeyDown,
+    constraints,
   },
   ref,
 ) {
@@ -133,7 +134,7 @@ export const DataGrid = forwardRef<DataGridRef, DataGridProps>(function DataGrid
   return (
     <DataGridRowContext value={{ rowCount, onScrollToBottom }}>
       <DataGridCellContext value={{ cell, cellText, cellElement, cellTooltip, onCellChange }}>
-        <DataGridCellHeaderContext value={{ headerElement, headerText, getColumnSortable, onColumnSort, getColumnSortingState }}>
+        <DataGridCellHeaderContext value={{ headerElement, headerText, getColumnSortable, onColumnSort, getColumnSortingState, constraints }}>
           <DataGridBase
             key={gridKey.current}
             ref={innerGridRef}
