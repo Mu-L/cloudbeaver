@@ -23,9 +23,11 @@ import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.model.impl.PropertyDescriptor;
 import org.jkiss.dbeaver.registry.RegistryConstants;
 import org.jkiss.utils.ArrayUtils;
-import org.jkiss.utils.CommonUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class WebAuthProviderRegistry {
 
@@ -54,14 +56,6 @@ public class WebAuthProviderRegistry {
     private void loadExtensions(IExtensionRegistry registry) {
         {
             IConfigurationElement[] extConfigs = registry.getConfigurationElementsFor(WebAuthProviderDescriptor.EXTENSION_ID);
-            Arrays.sort(extConfigs, (o1, o2) -> {
-                String p1 = o1.getAttribute("extended");
-                String p2 = o2.getAttribute("extended");
-                if (CommonUtils.equalObjects(p1, p2)) return 0;
-                if (p1 == null) return -1;
-                if (p2 == null) return 1;
-                return 0;
-            });
             for (IConfigurationElement ext : extConfigs) {
                 // Load webServices
                 if (TAG_AUTH_PROVIDER.equals(ext.getName())) {
