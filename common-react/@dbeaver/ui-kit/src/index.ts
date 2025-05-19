@@ -39,3 +39,4 @@ export { Spinner, type SpinnerProps } from './Spinner/Spinner.js';
 export { Radio, RadioGroup, useRadioContext, useRadioStore, type RadioProviderProps, type RadioProps, type RadioGroupProps } from './Radio/index.js';
 export * from './utils/clsx.js';
 export * from './ComponentProvider.js';
+export * from './Icon/index.js';
