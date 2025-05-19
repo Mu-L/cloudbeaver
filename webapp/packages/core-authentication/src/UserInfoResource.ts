@@ -17,7 +17,6 @@ import { AUTH_PROVIDER_LOCAL_ID } from './AUTH_PROVIDER_LOCAL_ID.js';
 import { AuthProviderService } from './AuthProviderService.js';
 import type { ELMRole } from './ELMRole.js';
 import type { IAuthCredentials } from './IAuthCredentials.js';
-import { isNotNullDefined } from '@dbeaver/js-helpers';
 
 export type UserLogoutInfo = AuthLogoutQuery['result'];
 
@@ -90,7 +89,7 @@ export class UserInfoResource extends CachedDataResource<UserInfo | null, void> 
     return this.data?.userId || ANONYMOUS_USER_ID;
   }
 
-  hasToken(providerId: string, configurationId?: string): boolean {
+  hasToken(providerId: string): boolean {
     if (providerId === AUTH_PROVIDER_LOCAL_ID) {
       return true;
     }
@@ -100,9 +99,7 @@ export class UserInfoResource extends CachedDataResource<UserInfo | null, void> 
     }
 
     // TODO: will be changed due wrong origin in authTokens
-    return this.data.authTokens.some(token =>
-      token.authProvider === providerId && isNotNullDefined(configurationId) ? token.authConfiguration === configurationId : true,
-    );
+    return this.data.authTokens.some(token => token.authProvider === providerId);
   }
 
   async login(provider: string, { credentials, configurationId, linkUser, forceSessionsLogout }: ILoginOptions): Promise<AuthInfo> {
