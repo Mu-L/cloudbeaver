@@ -83,7 +83,6 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         Map<String, Object> userData = new HashMap<>();
         if (!isFullDN(userName) && CommonUtils.isNotEmpty(ldapSettings.getLoginAttribute())) {
             userData = validateAndLoginUserAccessByUsername(userName, password, ldapSettings);
-
         }
         if (CommonUtils.isEmpty(userData)) {
             String fullUserDN = buildFullUserDN(userName, ldapSettings);
@@ -104,6 +103,11 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
         SMAutoAssign smAutoAssign = new SMAutoAssign();
         autoAssignmentTeamIds.forEach(smAutoAssign::addExternalTeamId);
         return smAutoAssign;
+    }
+
+    @Override
+    public void postAuthentication() {
+        LdapSslSocketFactory.removeContextFactory();
     }
 
     @Nullable

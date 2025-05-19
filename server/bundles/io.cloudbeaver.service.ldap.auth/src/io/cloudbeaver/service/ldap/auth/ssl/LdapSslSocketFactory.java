@@ -16,6 +16,8 @@
  */
 package io.cloudbeaver.service.ldap.auth.ssl;
 
+import org.jkiss.code.NotNull;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -29,8 +31,12 @@ import javax.net.ssl.SSLSocketFactory;
 public class LdapSslSocketFactory extends SSLSocketFactory {
     private static final ThreadLocal<SSLSocketFactory> tlsFactory = new ThreadLocal<>();
 
-    public static void setContextFactory(SSLContext ctx) {
+    public static void setContextFactory(@NotNull SSLContext ctx) {
         tlsFactory.set(ctx.getSocketFactory());
+    }
+
+    public static void removeContextFactory() {
+        tlsFactory.remove();
     }
 
     //this method is called by internal api
