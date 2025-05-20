@@ -2414,12 +2414,11 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
         if (!CommonUtils.isEmpty(externalTeamIdMetadataFieldName)) {
             String[] newTeamIds = autoAssign.getExternalTeamIds()
                 .stream()
-                .map(externalTeamId -> findTeamByExternalTeamId(
+                .flatMap(externalTeamId -> findTeamByExternalTeamId(
                     allTeams,
                     externalTeamIdMetadataFieldName,
                     externalTeamId
-                ))
-                .filter(Objects::nonNull)
+                ).stream())
                 .map(SMTeam::getTeamId)
                 .toArray(String[]::new);
             if (!ArrayUtils.isEmpty(newTeamIds)) {
@@ -2446,15 +2445,16 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
         return ((SMAuthProviderAssigner) authProviderInstance).detectAutoAssignments(monitor, providerConfig, userData);
     }
 
-    @Nullable
-    private SMTeam findTeamByExternalTeamId(SMTeam[] allTeams, String externalGroupParameterName, String groupId) {
+    @NotNull
+    private List<SMTeam> findTeamByExternalTeamId(SMTeam[] allTeams, String externalGroupParameterName, String groupId) {
+        List<SMTeam> result = new ArrayList<>();
         for (SMTeam team : allTeams) {
             String teamGroupId = team.getMetaParameters().get(externalGroupParameterName);
             if (CommonUtils.equalObjects(teamGroupId, groupId)) {
-                return team;
+                result.add(team);
             }
         }
-        return null;
+        return result;
     }
 
 
