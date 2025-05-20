@@ -209,7 +209,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
     return () => {
       tableData.editor.action.removeHandler(syncEditor);
     };
-  }, [tableData.editor, selectionAction]);
+  }, [tableData.editor, selectionAction, handlers, tableData]);
 
   const handleFocusChange = (position: ICellPosition) => {
     focusedCell.current = position;
@@ -253,7 +253,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
       getDataGridApi: () => dataGridRef.current,
       focus: restoreFocus,
     }),
-    [model, actions, resultIndex, simple, dataGridRef, gridContainerRef, restoreFocus],
+    [model, actions, resultIndex, simple, dataGridRef, restoreFocus],
   );
 
   const columnsCount = useCreateGridReactiveValue(
@@ -497,7 +497,6 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
               getHeaderResizable={getHeaderResizable}
               getRowHeight={() => rowHeight}
               getColumnKey={getColumnKey}
-              onCellKeyDown={handleCellKeyDown}
               columnCount={columnsCount}
               rowCount={rowsCount}
               onColumnSort={handleSort}
@@ -507,6 +506,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
               onFocus={handleFocusChange}
               onScrollToBottom={handleScrollToBottom}
               onCellChange={handleCellChange}
+              onCellKeyDown={handleCellKeyDown}
             />
           </div>
         </TableDataContext.Provider>
