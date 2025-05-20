@@ -51,6 +51,7 @@ import org.jkiss.dbeaver.model.secret.DBSSecretController;
 import org.jkiss.dbeaver.model.security.*;
 import org.jkiss.dbeaver.model.security.user.SMTeam;
 import org.jkiss.dbeaver.model.security.user.SMUser;
+import org.jkiss.dbeaver.utils.GeneralUtils;
 import org.jkiss.utils.CommonUtils;
 
 import java.text.MessageFormat;
@@ -223,6 +224,12 @@ public class WebServiceAdmin implements DBWServiceAdmin {
         if (user == null) {
             throw new DBWebException("Admin user is not found");
         }
+        try {
+            GeneralUtils.validateResourceNameUnconditionally(teamId);
+        } catch (DBException e) {
+            throw new DBWebException(e.getMessage(), e);
+        }
+
         webSession.addInfoMessage("Create new team - " + teamId);
         try {
             SMTeam newTeam = webSession.getAdminSecurityController().createTeam(
