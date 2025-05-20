@@ -7,7 +7,8 @@
  */
 import { observer } from 'mobx-react-lite';
 
-import { IconButton, IconCross } from '@dbeaver/ui-kit';
+import { IconButton } from '@dbeaver/ui-kit';
+import { Icon } from '../../Icon.js';
 import { IconOrImage } from '../../IconOrImage.js';
 import { useTranslate } from '../../localization/useTranslate.js';
 import { s } from '../../s.js';
@@ -47,7 +48,7 @@ export const CommonDialogHeader = observer<Props>(function CommonDialogHeader({
         <h3 className={s(computedStyles, { headerTitle: true })}>{translate(title)}</h3>
         {onReject && (
           <IconButton variant="secondary" size="small" aria-label="Close" onClick={onReject}>
-            <IconCross />
+            <Icon name="cross" width={16} height={16}  />
           </IconButton>
         )}
       </div>

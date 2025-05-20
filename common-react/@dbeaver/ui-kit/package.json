@@ -7,11 +7,11 @@
   "exports": {
     ".": "./lib/index.js",
     "./*.css": "./src/*.css",
-    "./*": "./lib/*.js"
+    "./*": "./lib/*.js",
+    "./assets/icons/*.svg": "./assets/icons/*.svg"
   },
   "scripts": {
     "build": "tsc -b",
-    "build:icons": "svgr --out-dir ./src/Icon --icon --filename-case pascal --jsx-runtime automatic --index-template ./scripts/icon-index-template.js --typescript -- ./assets/icons",
     "docs": "ladle serve",
     "clean": "rimraf --glob lib"
   },
@@ -19,14 +19,12 @@
   "devDependencies": {
     "@dbeaver/tsconfig": "workspace:^",
     "@ladle/react": "^5",
-    "@svgr/cli": "^8.1.0",
     "@tailwindcss/vite": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@wroud/vite-plugin-asset-resolver": "^0",
     "@wroud/vite-plugin-tsc": "^0.11.6",
     "rimraf": "^6",
-    "svgo": "^3.3.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^6"
