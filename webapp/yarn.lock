@@ -1996,7 +1996,7 @@ __metadata:
     "@parcel/watcher": "npm:^2"
     axios: "npm:^1"
     graphql: "npm:^16"
-    graphql-request: "npm:^6"
+    graphql-request: "npm:^7"
     graphql-tag: "npm:^2"
     mobx: "npm:^6"
     tslib: "npm:^2"
@@ -11623,7 +11623,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-request@npm:^6, graphql-request@npm:^6.0.0":
+"graphql-request@npm:^6.0.0":
   version: 6.1.0
   resolution: "graphql-request@npm:6.1.0"
   dependencies:
@@ -11632,6 +11632,17 @@ __metadata:
   peerDependencies:
     graphql: 14 - 16
   checksum: 10c0/f8167925a110e8e1de93d56c14245e7e64391dc8dce5002dd01bf24a3059f345d4ca1bb6ce2040e2ec78264211b0704e75da3e63984f0f74d2042f697a4e8cc6
+  languageName: node
+  linkType: hard
+
+"graphql-request@npm:^7":
+  version: 7.1.2
+  resolution: "graphql-request@npm:7.1.2"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.2.0"
+  peerDependencies:
+    graphql: 14 - 16
+  checksum: 10c0/d87ae2a5603bf5e69a91ff9e2b7a3902ed285d6ea470daf7df37cfa48e71a674a8b026f3fe76881a450484b52e90eff43f950faa6851cd6c79bd5b4ab9d19451
   languageName: node
   linkType: hard
 
@@ -17581,9 +17592,9 @@ __metadata:
   linkType: hard
 
 "tapable@npm:^2.2.0":
-  version: 2.2.1
-  resolution: "tapable@npm:2.2.1"
-  checksum: 10c0/bc40e6efe1e554d075469cedaba69a30eeb373552aaf41caeaaa45bf56ffacc2674261b106245bd566b35d8f3329b52d838e851ee0a852120acae26e622925c9
+  version: 2.2.2
+  resolution: "tapable@npm:2.2.2"
+  checksum: 10c0/8ad130aa705cab6486ad89e42233569a1fb1ff21af115f59cebe9f2b45e9e7995efceaa9cc5062510cdb4ec673b527924b2ab812e3579c55ad659ae92117011e
   languageName: node
   linkType: hard
 
@@ -18569,12 +18580,12 @@ __metadata:
   linkType: hard
 
 "watchpack@npm:^2.4.2":
-  version: 2.4.2
-  resolution: "watchpack@npm:2.4.2"
+  version: 2.4.3
+  resolution: "watchpack@npm:2.4.3"
   dependencies:
     glob-to-regexp: "npm:^0.4.1"
     graceful-fs: "npm:^4.1.2"
-  checksum: 10c0/ec60a5f0e9efaeca0102fd9126346b3b2d523e01c34030d3fddf5813a7125765121ebdc2552981136dcd2c852deb1af0b39340f2fcc235f292db5399d0283577
+  checksum: 10c0/212c645311d6c3a920ccca5b5d27233e8477be4352a20ae30c207e1bc71691154f1179316d31fb1135e56cc948bae8590a648fa9c05f088741c18ef613203475
   languageName: node
   linkType: hard
 
@@ -19207,9 +19218,9 @@ __metadata:
   linkType: hard
 
 "zod@npm:^3":
-  version: 3.25.3
-  resolution: "zod@npm:3.25.3"
-  checksum: 10c0/744bc6d8f1500fbda2ddc713540fea7db2354c585d256eed9064f11d89976c184e7472a999a6713d2ae8e148d9bc9f23aae0403c5eb57e45c8563cbd036aaa9d
+  version: 3.25.7
+  resolution: "zod@npm:3.25.7"
+  checksum: 10c0/9bf497ed9b810d30b84ae032ec7882435d0fb9c94db08427592f56b711227726cfb7551ee7ca9f99135dfaff1fcff5ce261e25a6400f62b651ec23880cb41013
   languageName: node
   linkType: hard
 
