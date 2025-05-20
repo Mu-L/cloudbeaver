@@ -18,7 +18,7 @@ import { getCommonAndOSSpecificKeys } from '../Action/KeyBinding/getCommonAndOSS
 import styles from './CaptureView.module.css';
 import { CaptureViewContext } from './CaptureViewContext.js';
 import type { IView } from './IView.js';
-import { parseHotkey } from './parseHotkey.js';
+import { parseHotkey, type IHotkeyParsed } from './parseHotkey.js';
 import { useActiveView } from './useActiveView.js';
 import { useViewContext } from './useViewContext.js';
 
@@ -44,7 +44,7 @@ export const CaptureView = observer<React.PropsWithChildren<ICaptureViewProps>>(
 
   useHotkeys(
     keys,
-    (event, handler) => {
+    (event: KeyboardEvent, handler: IHotkeyParsed) => {
       if (!state.reference?.contains(document.activeElement)) {
         return;
       }
@@ -52,7 +52,7 @@ export const CaptureView = observer<React.PropsWithChildren<ICaptureViewProps>>(
       const action = actionItems.find(action => {
         const commonAndSpecificKeys = getCommonAndOSSpecificKeys(action.binding?.binding);
         return commonAndSpecificKeys.some(key => {
-          const hotkey = parseHotkey(key);
+          const hotkey = parseHotkey({ hotkey: key });
 
           return isObjectsEqual(hotkey, handler);
         });
@@ -63,11 +63,11 @@ export const CaptureView = observer<React.PropsWithChildren<ICaptureViewProps>>(
     {
       enabled: keys.length > 0,
       enableOnFormTags: ['INPUT', 'SELECT', 'TEXTAREA'],
-      preventDefault(event, handler) {
+      preventDefault(event: KeyboardEvent, handler: IHotkeyParsed) {
         const action = actionItems.find(action => {
           const commonAndSpecificKeys = getCommonAndOSSpecificKeys(action.binding?.binding);
           return commonAndSpecificKeys.some(key => {
-            const hotkey = parseHotkey(key);
+            const hotkey = parseHotkey({ hotkey: key });
 
             return isObjectsEqual(hotkey, handler);
           });
