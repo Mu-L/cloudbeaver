@@ -499,12 +499,12 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
               getColumnKey={getColumnKey}
               columnCount={columnsCount}
               rowCount={rowsCount}
-              onColumnSort={handleSort}
               getColumnSortable={getColumnSortable}
               getColumnSortingState={colIdx => constraintsAction?.getOrder(colIdx)}
               getRowId={rowIdx => (tableData.rows[rowIdx] ? ResultSetDataKeysUtils.serialize(tableData.rows[rowIdx]) : '')}
               onFocus={handleFocusChange}
               onScrollToBottom={handleScrollToBottom}
+              onColumnSort={handleSort}
               onCellChange={handleCellChange}
               onCellKeyDown={handleCellKeyDown}
             />
