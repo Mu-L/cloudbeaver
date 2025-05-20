@@ -52,7 +52,7 @@ export const CaptureView = observer<React.PropsWithChildren<ICaptureViewProps>>(
       const action = actionItems.find(action => {
         const commonAndSpecificKeys = getCommonAndOSSpecificKeys(action.binding?.binding);
         return commonAndSpecificKeys.some(key => {
-          const hotkey = parseHotkey({ hotkey: key });
+          const hotkey = parseHotkey(key);
 
           return isObjectsEqual(hotkey, handler);
         });
@@ -67,7 +67,7 @@ export const CaptureView = observer<React.PropsWithChildren<ICaptureViewProps>>(
         const action = actionItems.find(action => {
           const commonAndSpecificKeys = getCommonAndOSSpecificKeys(action.binding?.binding);
           return commonAndSpecificKeys.some(key => {
-            const hotkey = parseHotkey({ hotkey: key });
+            const hotkey = parseHotkey(key);
 
             return isObjectsEqual(hotkey, handler);
           });

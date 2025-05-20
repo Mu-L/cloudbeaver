@@ -15,14 +15,6 @@ export interface IHotkeyParsed extends Keys {
   description?: string;
 }
 
-export interface IParseHotkeysArgs {
-  hotkey: string;
-  combinationKey?: string;
-  description?: string;
-  useKey?: boolean;
-  isSequence?: boolean;
-}
-
 const reservedModifierKeywords = ['shift', 'alt', 'meta', 'mod', 'ctrl'];
 
 const mappedKeys: Record<string, string> = {
@@ -62,7 +54,7 @@ export function parseKeysHookInput(keys: string, splitKey = ','): string[] {
   return keys.split(splitKey);
 }
 
-export function parseHotkey({ hotkey, combinationKey = '+', description, useKey = false, isSequence = false }: IParseHotkeysArgs): IHotkeyParsed {
+export function parseHotkey(hotkey: string, combinationKey = '+'): IHotkeyParsed {
   const keys = hotkey
     .toLocaleLowerCase()
     .split(combinationKey)
@@ -81,8 +73,8 @@ export function parseHotkey({ hotkey, combinationKey = '+', description, useKey 
   return {
     ...modifiers,
     keys: singleCharKeys,
-    isSequence,
-    useKey,
-    description,
+    isSequence: false,
+    useKey: false,
+    description: undefined,
   };
 }
