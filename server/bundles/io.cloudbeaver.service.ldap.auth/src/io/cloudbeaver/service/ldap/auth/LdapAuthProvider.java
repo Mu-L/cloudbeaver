@@ -401,7 +401,7 @@ public class LdapAuthProvider implements SMAuthProviderExternal<SMSession>, SMBr
 
     @Override
     public Object getInputUsername(@NotNull Map<String, Object> cred) {
-        return cred.get(LdapConstants.CRED_USERNAME);
+        return cred.get(LdapConstants.CRED_USER_DN);
     }
 
     private boolean isFullDN(String userName) {
