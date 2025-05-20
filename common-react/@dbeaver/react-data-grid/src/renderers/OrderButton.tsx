@@ -1,4 +1,4 @@
-import { Button, clsx } from '@dbeaver/ui-kit';
+import { IconButton, IconSortAsc, IconSortDesc, IconSortUnknown } from '@dbeaver/ui-kit';
 
 interface OrderButtonProps {
   attributePosition: number;
@@ -14,15 +14,16 @@ export function OrderButton({ attributePosition, sortState, onSort, tabIndex, re
   };
 
   return (
-    <Button
-      variant={sortState ? 'primary' : 'secondary'}
-      className={clsx('tw:flex tw:items-center tw:justify-between tw:gap-1')}
+    <IconButton
+      variant="secondary"
       size="small"
       onClick={handleClick}
       tabIndex={tabIndex}
       ref={ref}
+      aria-label='Sort'
     >
-      {sortState ? <div className="tw:flex tw:items-center tw:gap-1">{sortState === 'asc' ? '↑' : '↓'}</div> : 'unsorted'}
-    </Button>
+      {sortState && (sortState === 'asc' ? <IconSortAsc /> : <IconSortDesc />)}
+      {!sortState && <IconSortUnknown />}
+    </IconButton>
   );
 }
