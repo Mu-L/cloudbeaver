@@ -71,7 +71,7 @@ export const Body = observer(function Body() {
           <Loader suspense overlay>
             <Notifications />
           </Loader>
-          <div style={{display: 'none'}} dangerouslySetInnerHTML={{__html: icons}} />
+          <div style={{ display: 'none' }} dangerouslySetInnerHTML={{ __html: icons }} />
         </div>
       </Loader>
     </DNDProvider>
