@@ -6,14 +6,7 @@
  * you may not use this file except in compliance with the License.
  */
 
-import type { Keys } from 'react-hotkeys-hook';
-
-export interface IHotkeyParsed extends Keys {
-  keys: string[];
-  isSequence: boolean;
-  useKey: boolean;
-  description?: string;
-}
+import type { Hotkey } from '@cloudbeaver/core-blocks';
 
 const reservedModifierKeywords = ['shift', 'alt', 'meta', 'mod', 'ctrl'];
 
@@ -54,7 +47,7 @@ export function parseKeysHookInput(keys: string, splitKey = ','): string[] {
   return keys.split(splitKey);
 }
 
-export function parseHotkey(hotkey: string, combinationKey = '+'): IHotkeyParsed {
+export function parseHotkey(hotkey: string, combinationKey = '+'): Hotkey {
   const keys = hotkey
     .toLocaleLowerCase()
     .split(combinationKey)

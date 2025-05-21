@@ -2270,7 +2270,6 @@ __metadata:
     mobx-react-lite: "npm:^4"
     react: "npm:^19"
     react-dom: "npm:^19"
-    react-hotkeys-hook: "npm:^5"
     tslib: "npm:^2"
     typescript: "npm:^5"
     typescript-plugin-css-modules: "npm:^5"
