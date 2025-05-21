@@ -20,8 +20,19 @@ export function OrderButton({ colIdx, sortState, onSort, tabIndex, ref }: OrderB
   const iconSrc = sortState === 'asc' ? svgSortAsc : sortState === 'desc' ? svgSortDesc : svgSortUnknown;
 
   return (
-    <IconButton variant="secondary" size="small" onClick={handleClick} tabIndex={tabIndex} ref={ref} aria-label="Sort">
-      <svg className={clsx(sortState && 'tw:text-(--dbv-kit-icon-btn-primary-foreground)')} width="16" height="16" viewBox="0 0 16 16">
+    <IconButton
+      variant="secondary"
+      size="small"
+      onClick={handleClick}
+      tabIndex={tabIndex}
+      ref={ref}
+      aria-label="Sort"
+      className={clsx(
+        'tw:opacity-0 tw:group-focus:opacity-100 tw:focus:opacity-100 tw:group-hover:opacity-100 tw:hover:opacity-100',
+        sortState && 'tw:opacity-100',
+      )}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16">
         <use width={16} height={16} href={iconSrc} />
       </svg>
     </IconButton>

@@ -26,7 +26,11 @@ export function HeaderCellContentRenderer({ colIdx, tabIndex }: Props) {
   };
 
   return (
-    <div tabIndex={tabIndex} onKeyDown={handleKeyDown} className="tw:w-full tw:flex tw:items-center tw:justify-between tw:gap-1 tw:outline-none">
+    <div
+      tabIndex={tabIndex}
+      onKeyDown={handleKeyDown}
+      className="tw:w-full tw:flex tw:items-center tw:justify-between tw:gap-1 tw:outline-none tw:group"
+    >
       <span className="tw:overflow-hidden tw:text-ellipsis">{headerElement ?? getHeaderText ?? ''}</span>
       {isColumnSortable && onColumnSort && <OrderButton ref={orderButtonRef} colIdx={colIdx} sortState={sortingState} onSort={onColumnSort} />}
     </div>
