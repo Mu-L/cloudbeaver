@@ -366,11 +366,11 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
     [constraintsAction],
   );
 
-   function handleSort(colIdx: number, multiple?: boolean) {
+  function handleSort(colIdx: number, order: 'asc' | 'desc' | null, isMultiple: boolean) {
     const column = tableData.getColumn(colIdx)?.key;
     if (!column || !constraintsAction) {
       return;
-    } 
+    }
     const resultColumn = tableData.getColumnInfo(column);
     if (!resultColumn) {
       return;
@@ -378,7 +378,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
     const currentOrder = constraintsAction!.getOrder(resultColumn.position);
     const nextOrder = getNextOrder(currentOrder);
     model.request(() => {
-      constraintsAction!.setOrder(resultColumn.position, nextOrder, !!multiple);
+      constraintsAction!.setOrder(resultColumn.position, nextOrder, isMultiple);
     });
   }
 
@@ -499,8 +499,6 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
       }
     }
   };
-
-  
 
   return (
     <DataGridContext.Provider value={gridContext}>
