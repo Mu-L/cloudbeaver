@@ -1,23 +1,21 @@
 import { clsx, IconButton } from '@dbeaver/ui-kit';
 
-import icons from '@dbeaver/ui-kit/assets/icons/icons.svg?url';
-
 interface OrderButtonProps {
-  attributePosition: number;
+  colIdx: number;
   sortState?: 'asc' | 'desc' | null;
   onSort: (attributePosition: number, multiple?: boolean) => void;
   tabIndex?: number;
   ref: React.Ref<HTMLButtonElement>;
 }
 
-export function OrderButton({ attributePosition, sortState, onSort, tabIndex, ref }: OrderButtonProps) {
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    onSort(attributePosition, e.ctrlKey || e.metaKey);
-  };
+export function OrderButton({ colIdx, sortState, onSort, tabIndex, ref }: OrderButtonProps) {
+  function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+    onSort(colIdx, e.ctrlKey || e.metaKey);
+  }
 
-  const svgSortAsc = icons + '#icon-sort-asc';
-  const svgSortDesc = icons + '#icon-sort-desc';
-  const svgSortUnknown = icons + '#icon-sort-unknown';
+  const svgSortAsc = '#icon-sort-asc';
+  const svgSortDesc = '#icon-sort-desc';
+  const svgSortUnknown = '#icon-sort-unknown';
 
   const iconSrc = sortState === 'asc' ? svgSortAsc : sortState === 'desc' ? svgSortDesc : svgSortUnknown;
 
