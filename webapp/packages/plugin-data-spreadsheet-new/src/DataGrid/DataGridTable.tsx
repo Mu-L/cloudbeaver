@@ -348,7 +348,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
   const columnSortable = useCreateGridReactiveValue(
     getColumnSortable,
     (onValueChange, colIdx) => reaction(() => getColumnSortable(colIdx), onValueChange),
-    [tableData],
+    [tableData, constraintsAction, model],
   );
 
   function getColumnSortingState(colIdx: number) {
@@ -363,7 +363,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
   const columnSortingState = useCreateGridReactiveValue(
     getColumnSortingState,
     (onValueChange, colIdx) => reaction(() => getColumnSortingState(colIdx), onValueChange),
-    [constraintsAction],
+    [tableData, constraintsAction, model],
   );
 
   function handleSort(colIdx: number, order: 'asc' | 'desc' | null, isMultiple: boolean) {
