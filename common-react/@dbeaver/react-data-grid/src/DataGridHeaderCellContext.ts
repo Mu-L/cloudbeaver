@@ -8,8 +8,8 @@ export interface IDataGridHeaderCellContext {
   getHeaderResizable?: (colIdx: number) => boolean;
   getHeaderHeight?: () => number;
   getHeaderPinned?: (colIdx: number) => boolean;
-  getColumnSortingState?: (colIdx: number) => 'asc' | 'desc' | undefined | null;
-  getColumnSortable?: (colIdx: number) => boolean;
+  columnSortingState?: IGridReactiveValue<'asc' | 'desc' | undefined | null, [colIdx: number]>;
+  columnSortable?: IGridReactiveValue<boolean, [colIdx: number]>;
   onColumnSort?: (colIdx: number, multiple?: boolean) => void;
 }
 

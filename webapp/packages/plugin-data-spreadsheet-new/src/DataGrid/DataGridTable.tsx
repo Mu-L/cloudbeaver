@@ -338,6 +338,50 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
     [],
   );
 
+  function getColumnSortable(colIdx: number) {
+    return (
+      Boolean(tableData.getColumn(colIdx) && constraintsAction?.supported && isResultSetDataModel(model) && !model.isDisabled(resultIndex)) &&
+      colIdx !== 0
+    );
+  }
+
+  const columnSortable = useCreateGridReactiveValue(
+    getColumnSortable,
+    (onValueChange, colIdx) => reaction(() => getColumnSortable(colIdx), onValueChange),
+    [tableData],
+  );
+
+  function getColumnSortingState(colIdx: number) {
+    const column = tableData.getColumn(colIdx)?.key;
+    if (!column || !constraintsAction) {
+      return null;
+    }
+    const resultColumn = tableData.getColumnInfo(column);
+    return resultColumn ? constraintsAction?.getOrder(resultColumn.position) : null;
+  }
+
+  const columnSortingState = useCreateGridReactiveValue(
+    getColumnSortingState,
+    (onValueChange, colIdx) => reaction(() => getColumnSortingState(colIdx), onValueChange),
+    [constraintsAction],
+  );
+
+   function handleSort(colIdx: number, multiple?: boolean) {
+    const column = tableData.getColumn(colIdx)?.key;
+    if (!column || !constraintsAction) {
+      return;
+    } 
+    const resultColumn = tableData.getColumnInfo(column);
+    if (!resultColumn) {
+      return;
+    }
+    const currentOrder = constraintsAction!.getOrder(resultColumn.position);
+    const nextOrder = getNextOrder(currentOrder);
+    model.request(() => {
+      constraintsAction!.setOrder(resultColumn.position, nextOrder, !!multiple);
+    });
+  }
+
   function handleCellChange(rowIdx: number, colIdx: number, value: string) {
     const row = tableData.rows[rowIdx];
     const column = tableData.getColumn(colIdx)?.key;
@@ -456,20 +500,7 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
     }
   };
 
-  function handleSort(attributePosition: number, multiple?: boolean) {
-    const currentOrder = constraintsAction!.getOrder(attributePosition);
-    const nextOrder = getNextOrder(currentOrder);
-    model.request(() => {
-      constraintsAction!.setOrder(attributePosition, nextOrder, !!multiple);
-    });
-  }
-
-  function getColumnSortable(colIdx: number) {
-    return (
-      Boolean(tableData.getColumn(colIdx) && constraintsAction?.supported && isResultSetDataModel(model) && !model.isDisabled(resultIndex)) &&
-      colIdx !== 0
-    );
-  }
+  
 
   return (
     <DataGridContext.Provider value={gridContext}>
@@ -499,8 +530,8 @@ export const DataGridTable = observer<IDataPresentationProps>(function DataGridT
               getColumnKey={getColumnKey}
               columnCount={columnsCount}
               rowCount={rowsCount}
-              getColumnSortable={getColumnSortable}
-              getColumnSortingState={colIdx => constraintsAction?.getOrder(colIdx)}
+              columnSortable={columnSortable}
+              columnSortingState={columnSortingState}
               getRowId={rowIdx => (tableData.rows[rowIdx] ? ResultSetDataKeysUtils.serialize(tableData.rows[rowIdx]) : '')}
               onFocus={handleFocusChange}
               onScrollToBottom={handleScrollToBottom}

@@ -8,13 +8,12 @@ interface Props {
   tabIndex?: number;
 }
 export function HeaderCellContentRenderer({ colIdx, tabIndex }: Props) {
-  const attributePosition = colIdx - 1;
   const cellHeaderContext = use(DataGridCellHeaderContext);
   const headerElement = useGridReactiveValue(cellHeaderContext?.headerElement, colIdx);
   const getHeaderText = useGridReactiveValue(headerElement ? undefined : cellHeaderContext?.headerText, colIdx);
-  const isColumnSortable = cellHeaderContext?.getColumnSortable?.(colIdx);
+  const isColumnSortable = useGridReactiveValue(cellHeaderContext?.columnSortable, colIdx);
   const onColumnSort = cellHeaderContext?.onColumnSort;
-  const sortingState = cellHeaderContext?.getColumnSortingState?.(attributePosition);
+  const sortingState = useGridReactiveValue(cellHeaderContext?.columnSortingState, colIdx);
 
   const orderButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -29,9 +28,7 @@ export function HeaderCellContentRenderer({ colIdx, tabIndex }: Props) {
   return (
     <div tabIndex={tabIndex} onKeyDown={handleKeyDown} className="tw:w-full tw:flex tw:items-center tw:justify-between tw:gap-1 tw:outline-none">
       <span className="tw:overflow-hidden tw:text-ellipsis">{headerElement ?? getHeaderText ?? ''}</span>
-      {isColumnSortable && onColumnSort && (
-        <OrderButton ref={orderButtonRef} attributePosition={attributePosition} sortState={sortingState} onSort={onColumnSort} />
-      )}
+      {isColumnSortable && onColumnSort && <OrderButton ref={orderButtonRef} colIdx={colIdx} sortState={sortingState} onSort={onColumnSort} />}
     </div>
   );
 }
