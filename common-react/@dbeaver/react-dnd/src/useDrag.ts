@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { globalDnDStore, type DnDStoreProvider } from './store.js';
+import { DND_STORE_PREFIX, globalDnDStore, type DnDStoreProvider } from './store.js';
 
 interface IDragOptions {
   draggable?: boolean;
@@ -29,7 +29,7 @@ export function useDrag({ draggable, onDragStart, onDrag, onDragEnd }: IDragOpti
     }
     event.stopPropagation();
     event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData(`application/dbeaver-react-dnd-${id}`, id);
+    event.dataTransfer.setData(`${DND_STORE_PREFIX}${id}`, id);
     setDragging(true);
     optionsRef.current.onDragStart?.(event, globalDnDStore.getProvider(id));
   }
@@ -48,7 +48,6 @@ export function useDrag({ draggable, onDragStart, onDrag, onDragEnd }: IDragOpti
     setDragging(false);
     optionsRef.current.onDragEnd?.(event, globalDnDStore.getProvider(id));
     globalDnDStore.removeData(id);
-    console.log('drag end', event);
   }
 
   return {

@@ -1,3 +1,5 @@
+export const DND_STORE_PREFIX = 'application/dbeaver-react-dnd-';
+
 export interface DnDStoreProvider {
   getData: (key: string) => any;
   setData: (key: string, value: any) => void;
@@ -33,7 +35,7 @@ class DnDStore {
 }
 
 export function getStoreProvider(event: React.DragEvent<HTMLElement>): DnDStoreProvider | null {
-  const id = event.dataTransfer.types.find(type => type.startsWith('application/dbeaver-react-dnd-'))?.slice(30);
+  const id = event.dataTransfer.types.find(type => type.startsWith(DND_STORE_PREFIX))?.slice(DND_STORE_PREFIX.length);
 
   return id ? globalDnDStore.getProvider(id) : null;
 }
