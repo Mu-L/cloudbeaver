@@ -305,7 +305,7 @@ export class ConnectionFoldersBootstrap extends Bootstrap {
           projectId: targetNode.projectId,
           folder: parentFolderParam?.folderId,
           title: 'core_view_action_new_folder',
-          icon: '/icons/folder.svg#root',
+          icon: '/icons/folder.svg',
           create: true,
           selectProject: targetNode.selectProject,
           validation: async ({ name, folder, projectId }, setMessage) => {

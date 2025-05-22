@@ -290,23 +290,24 @@ const SubMenuGroupItem = observer<ISubMenuGroupItemProps>(function SubMenuGroupI
   if (group) {
     const firstActionItem = subMenuData.items.find(item => item instanceof MenuActionItem);
     if (firstActionItem) {
-      if (subMenuData.items.length === 1) {
-        return <MenuBarAction item={firstActionItem} parentMenuInfo={info ?? item.menu.info} context={subMenuData.context} className={className} />;
-      }
+      // TODO: don't want to show submenu right now
+      // if (subMenuData.items.length === 1) {
+      return <MenuBarAction item={firstActionItem} parentMenuInfo={info ?? item.menu.info} context={subMenuData.context} className={className} />;
+      // }
 
-      return (
-        <MenuBarAction
-          item={firstActionItem}
-          parentMenuInfo={info ?? item.menu.info}
-          context={menuData.context}
-          submenu={({ children }) => (
-            <SubMenuItem item={item} menuData={menuData} className={className} rtl={rtl} nestedMenuSettings={nestedMenuSettings}>
-              {children}
-            </SubMenuItem>
-          )}
-          className={className}
-        />
-      );
+      // return (
+      //   <MenuBarAction
+      //     item={firstActionItem}
+      //     parentMenuInfo={info ?? item.menu.info}
+      //     context={menuData.context}
+      //     submenu={({ children }) => (
+      //       <SubMenuItem item={item} menuData={menuData} className={className} rtl={rtl} nestedMenuSettings={nestedMenuSettings}>
+      //         {children}
+      //       </SubMenuItem>
+      //     )}
+      //     className={className}
+      //   />
+      // );
     }
   }
 
