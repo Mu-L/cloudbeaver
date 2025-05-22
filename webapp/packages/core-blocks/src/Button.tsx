@@ -80,7 +80,7 @@ export const Button = observer<ButtonProps>(function Button({
 
   const Tag = createElement(tag);
   return (
-    <UIKitButton render={Tag} {...rest} loading={loading} type={type} disabled={disabled} onClick={state.click} className={className}>
+    <UIKitButton render={Tag} {...rest} loading={loading} type={type} disabled={disabled} className={className} onClick={state.click}>
       {icon && (
         <ButtonIcon placement={iconPlacement}>
           <IconOrImage width={iconSize} icon={icon} viewBox={viewBox} />
