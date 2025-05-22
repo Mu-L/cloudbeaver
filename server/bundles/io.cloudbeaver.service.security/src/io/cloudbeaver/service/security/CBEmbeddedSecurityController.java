@@ -2298,6 +2298,9 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
                     ? providerAuthData
                     : filterSecuredUserData(providerAuthData, getAuthProvider(authProviderId))
             );
+            if (authProvider.getInstance() instanceof SMAuthProviderExternal<?> authProviderExternal) {
+                authProviderExternal.postAuthentication();
+            }
         }
 
         String tokenAuthRole = updateUserAuthRoleIfNeeded(activeUserId, detectedAuthRole);
@@ -2368,7 +2371,7 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
         SMAutoAssign autoAssign,
         String userId,
         SMTeam[] allTeams
-    ) throws DBCException {
+    ) throws DBException {
         if (!(authProvider.getInstance() instanceof SMAuthProviderAssigner authProviderAssigner)) {
             return;
         }
@@ -2377,14 +2380,21 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
         if (!CommonUtils.isEmpty(externalTeamIdMetadataFieldName)) {
             String[] newTeamIds = autoAssign.getExternalTeamIds()
                 .stream()
-                .map(externalTeamId -> findTeamByExternalTeamId(
+                .flatMap(externalTeamId -> findTeamByExternalTeamId(
                     allTeams,
                     externalTeamIdMetadataFieldName,
                     externalTeamId
-                ))
-                .filter(Objects::nonNull)
+                ).stream())
                 .map(SMTeam::getTeamId)
                 .toArray(String[]::new);
+            SMUserTeam[] oldUserTeams = getUserTeams(userId);
+            Set<String> oldUserTeamIdSet = Arrays.stream(oldUserTeams).map(SMTeam::getTeamId).collect(Collectors.toSet());
+            oldUserTeamIdSet.remove(getDefaultUserTeam());
+            Set<String> newUserTeamIdSet = Arrays.stream(newTeamIds).collect(Collectors.toSet());
+            if (oldUserTeamIdSet.equals(newUserTeamIdSet)) {
+                //do not need to update teams and send events
+                return;
+            }
             if (!ArrayUtils.isEmpty(newTeamIds)) {
                 setUserTeams(
                     userId,
@@ -2409,15 +2419,16 @@ public class CBEmbeddedSecurityController<T extends ServletAuthApplication>
         return ((SMAuthProviderAssigner) authProviderInstance).detectAutoAssignments(monitor, providerConfig, userData);
     }
 
-    @Nullable
-    private SMTeam findTeamByExternalTeamId(SMTeam[] allTeams, String externalGroupParameterName, String groupId) {
+    @NotNull
+    private List<SMTeam> findTeamByExternalTeamId(SMTeam[] allTeams, String externalGroupParameterName, String groupId) {
+        List<SMTeam> result = new ArrayList<>();
         for (SMTeam team : allTeams) {
             String teamGroupId = team.getMetaParameters().get(externalGroupParameterName);
             if (CommonUtils.equalObjects(teamGroupId, groupId)) {
-                return team;
+                result.add(team);
             }
         }
-        return null;
+        return result;
     }
 
 
