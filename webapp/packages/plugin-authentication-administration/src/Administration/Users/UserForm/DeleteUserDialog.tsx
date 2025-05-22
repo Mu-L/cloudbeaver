@@ -1,6 +1,6 @@
 /*
  * CloudBeaver - Cloud Database Manager
- * Copyright (C) 2020-2024 DBeaver Corp and others
+ * Copyright (C) 2020-2025 DBeaver Corp and others
  *
  * Licensed under the Apache License, Version 2.0.
  * you may not use this file except in compliance with the License.
@@ -66,11 +66,11 @@ export const DeleteUserDialog: DialogComponent<IPayload> = function DeleteUserDi
         </Container>
       </CommonDialogBody>
       <CommonDialogFooter>
-        <Button mod={['outlined']} onClick={props.rejectDialog}>
+        <Button variant="secondary" onClick={props.rejectDialog}>
           {translate('ui_processing_cancel')}
         </Button>
         <Fill />
-        <Button mod={['unelevated']} disabled={name !== props.payload.userId} onClick={deleteUser}>
+        <Button disabled={name !== props.payload.userId} onClick={deleteUser}>
           {translate('ui_delete')}
         </Button>
       </CommonDialogFooter>

@@ -59,21 +59,21 @@ export const ExportNotification = observer<Props>(function ExportNotification({ 
         <SnackbarFooter timestamp={notification.timestamp}>
           {isReadyToDownload && (
             <>
-              <Button type="button" mod={['outlined']} onClick={state.delete}>
+              <Button type="button" variant="secondary" onClick={state.delete}>
                 {translate('ui_processing_cancel')}
               </Button>
-              <Button tag="a" href={state.downloadUrl} mod={['unelevated']} download onClick={state.download}>
+              <Button tag="a" href={state.downloadUrl} download onClick={state.download}>
                 {translate('data_transfer_notification_download')}
               </Button>
             </>
           )}
           {status === ENotificationType.Error && (
-            <Button type="button" mod={['outlined']} disabled={errorDetails.isOpen} onClick={errorDetails.open}>
+            <Button type="button" variant="secondary" disabled={errorDetails.isOpen} onClick={errorDetails.open}>
               {translate('ui_errors_details')}
             </Button>
           )}
           {status === ENotificationType.Loading && (
-            <Button type="button" mod={['outlined']} disabled={state.task?.process.getState() === EDeferredState.CANCELLING} onClick={state.cancel}>
+            <Button type="button" variant="secondary" disabled={state.task?.process.getState() === EDeferredState.CANCELLING} onClick={state.cancel}>
               {translate('ui_processing_cancel')}
             </Button>
           )}
